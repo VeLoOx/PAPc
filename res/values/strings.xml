@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">PAPclient</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_login">Login</string>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="register_title">Register</string>
+    <string name="login_title">Login</string>
+    <string name="name">Name</string>
+    <string name="email">Email</string>
+    <string name="pwd">Password</string>
+    <string name="btnRegister">Register</string>
+    <string name="tvWelcomeBar">Welcome</string>
+    <string name="title_activity_map">PlanRouteActivity</string>
+    <string name="password">Password</string>
+    <string name="cancel">Cancel</string>
+    <string name="set">Set</string>
+    <string name="title">Title</string>
+    <string name="logout">Logout</string>
+    <string name="planRoute">Plan route</string>
+    <string name="startNewRoute">Start new route</string>
+    <string name="chooseRoute">Choose route</string>
+    <string name="delete">Delete</string>
+    <string name="title_activity_start_new_route">StartNewRouteActivity</string>
+    <string name="addMarker">Add marker</string>
+    <string name="title_activity_show_route">ShowRouteActivity</string>
+    <string name="showDescription">Show description</string>
+    <string name="close">Close</string>
+    <string name="title_activity_choose_route">ChooseRouteActivity</string>
+
+</resources>
