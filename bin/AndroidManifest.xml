@@ -57,6 +57,7 @@
         <activity
             android:name="pl.pap.activites.PlanRouteActivity"
             android:label="@string/title_activity_map"
+            android:configChanges="orientation|screenSize"
             android:parentActivityName="pl.pap.activites.HomeActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

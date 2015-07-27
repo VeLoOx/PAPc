@@ -31,11 +31,6 @@ public class LoginActivity extends Activity implements Consts {
 	EditText etEmail;
 	// Password Edit View Object
 	EditText etPwd;
-	// Shared preferences
-	public static final String PREFS = "clientPrefs";
-	public static final String login = "loginKey";
-	public static final String pass = "passwordKey";
-	public static final String sessionID = "sessionIDKey";
 	SharedPreferences sharedpreferences;
 
 	@Override
@@ -60,9 +55,9 @@ public class LoginActivity extends Activity implements Consts {
 	@Override
 	protected void onResume() {
 		// prgDialog.show();
-		sharedpreferences = getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-		if (sharedpreferences.contains(login)
-				&& sharedpreferences.contains(pass)) {
+		sharedpreferences = getSharedPreferences(Consts.PREFS, Context.MODE_PRIVATE);
+		if (sharedpreferences.contains(USER_LOGIN)
+				&& sharedpreferences.contains(USER_PASS)) {
 
 			// Intent i = new Intent(this, HomeActivity.class);
 			// startActivity(i);
@@ -145,8 +140,8 @@ public class LoginActivity extends Activity implements Consts {
 								Editor editor = sharedpreferences.edit();
 								String u = etEmail.getText().toString();
 								String p = etPwd.getText().toString();
-								editor.putString(login, u);
-								editor.putString(pass, p);
+								editor.putString(USER_LOGIN, u);
+								editor.putString(USER_PASS, p);
 								editor.commit();
 								// Navigate to Home screen
 								navigateToHomeActivity();

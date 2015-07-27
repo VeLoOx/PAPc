@@ -1,5 +1,14 @@
 package pl.pap.activites;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -7,38 +16,36 @@ import pl.pap.client.R;
 import pl.pap.dialogs.MarkerDialog;
 import pl.pap.maps.MapsMethods;
 import pl.pap.maps.MapsSettings;
+import pl.pap.model.MarkerModel;
 import pl.pap.model.Route;
+import pl.pap.model.Test;
 import pl.pap.utils.Consts;
+import pl.pap.utils.SharedPrefsUtils;
+import android.annotation.SuppressLint;
+import android.app.ActionBar;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
 import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
-
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.app.ActionBarActivity;
-import android.annotation.SuppressLint;
-import android.app.ActionBar;
-import android.content.SharedPreferences.Editor;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.Toast;
 
 public class PlanRouteActivity extends FragmentActivity implements
 		OnMapLongClickListener, OnMapClickListener, OnMarkerDragListener,
@@ -50,7 +57,10 @@ public class PlanRouteActivity extends FragmentActivity implements
 	MarkerDialog mDialog = new MarkerDialog();
 	Marker currentMarker;
 	MapsSettings maps;
-	Route route;
+	Route route;// = new Route();
+	JSONObject jsonMarker;
+	StringWriter swMarker;
+	SharedPrefsUtils prefs;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +75,12 @@ public class PlanRouteActivity extends FragmentActivity implements
 			maps = new MapsSettings(googleMap);
 			googleMap = maps.setUpMap();
 			setUpListeners();
+			fillMap();
 			// setUpMap();
+			// prefs = this.getSharedPreferences(
+			// Consts.PREFS, Context.MODE_PRIVATE);
+			// Creating SharedPrefsUtils object
+			prefs = new SharedPrefsUtils(this);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -93,18 +108,19 @@ public class PlanRouteActivity extends FragmentActivity implements
 		switch (item.getItemId()) {
 
 		case R.id.item1:
-			ktoryElement = "pierwszy";
-
+			ktoryElement = "zapis";
+			saveRoute();
 			break;
 		case R.id.item2:
-			System.out.println("Marker map size " + route.getMarkerMap());
-			for (Object value : route.getMarkerMap().values()) {
-				googleMap.addMarker(route
-						.convertToMarkerOptions((Marker) value));
-			}
+			ktoryElement = "naniesienie na mape";
+			fillMap();
 			break;
 		case R.id.item3:
-			ktoryElement = "trzeci";
+			/*
+			 * ktoryElement = "marshall"; System.out.println("Gson mapper");
+			 * System.out.println(convertToJson());
+			 */
+			requestRoute();
 			break;
 		default:
 			ktoryElement = "¿aden";
@@ -115,10 +131,6 @@ public class PlanRouteActivity extends FragmentActivity implements
 				Toast.LENGTH_LONG).show();
 
 		return super.onOptionsItemSelected(item);
-	}
-
-	private void saveRoute() {
-
 	}
 
 	@Override
@@ -155,6 +167,17 @@ public class PlanRouteActivity extends FragmentActivity implements
 
 	}
 
+	private void fillMap() {
+		if (route != null) {
+			System.out.println("Marker map size " + route.getMarkerMap());
+			for (Object value : route.getMarkerMap().values()) {
+				googleMap.addMarker(route
+						.convertToMarkerOptions((MarkerModel) value));
+			}
+		} else
+			System.out.println("Route empty");
+	}
+
 	@Override
 	public void addMarker(LatLng point) {
 		MarkerOptions marker = new MarkerOptions().position(
@@ -163,7 +186,10 @@ public class PlanRouteActivity extends FragmentActivity implements
 		marker.draggable(true);
 		Marker tmp = googleMap.addMarker(marker);
 		// route.addMarkerToList(googleMap.addMarker(marker));
-		route.addMarkerToMap(tmp.getId(), tmp);
+		// MarkerModel markModel = new MarkerModel();
+		// markModel.copyValues(tmp);
+		// route.addMarkerToMap(markModel.getId(), markModel);
+		persistMarker(tmp);
 		System.out.println("Marker added " + point.latitude + "---"
 				+ point.longitude);
 	}
@@ -176,31 +202,73 @@ public class PlanRouteActivity extends FragmentActivity implements
 
 	}
 
+	private void persistMarker(Marker marker) {
+		MarkerModel markModel = new MarkerModel();
+		markModel.copyValues(marker);
+		route.addMarkerToMap(markModel.getMarkerId(), markModel);
+	}
+
 	@Override
 	public boolean updateMarkers(Marker marker) {
 		// if(route.removeMarkerFromMap(marker.getId())){
 		System.out.println("Marker remove and update status: "
 				+ route.removeMarkerFromMap(marker.getId()));
-		route.addMarkerToMap(marker.getId(), marker);
+		// route.addMarkerToMap(marker.getId(), marker);
+		persistMarker(marker);
 		System.out.println("Marker updated");
 		return true;
 		// }
 		// return false;
 	}
 
-	public void restInvoke(RequestParams params) {
+	private String convertToJson() {
+		Gson gson = new Gson();
+		String ret = "";
+		ret = gson.toJson(route);
+		return ret;
+	}
+
+	private void convertFromJson(String json) {
+		Gson gson = new Gson();
+		Route routeModel = gson.fromJson(json, Route.class);
+		System.out.println("GSON: String: " + route);
+		System.out.println(routeModel);
+		System.out.println(routeModel.getAutor());
+		System.out.println("rozmiar mapy markerow "
+				+ routeModel.getMarkerMap().size());
+		for (MarkerModel value : routeModel.getMarkerMap().values()) {
+			// System.out.println("ID "+(MarkerModel)value.toString());
+			System.out.println(value.getTitle());
+		}
+	}
+
+	private JSONObject convertToJson2() {
+		JSONObject jObject = new JSONObject();
+		try {
+			jObject.put("Marker", currentMarker);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// System.out.println(jObject);
+		return jObject;
+
+	}
+
+	private void restInvoke(RequestParams params) {
 		// Show Progress Dialog
 		// prgDialog.show();
 		// Make RESTful webservice call using AsyncHttpClient object
+		System.out.println("PlanRouteActivity: Inside restInvoke");
 		AsyncHttpClient client = new AsyncHttpClient();
-		client.get(domainAdress + LOGIN, params,
+		client.get(domainAdress + PERSIST_ROUTE, params,
 				new AsyncHttpResponseHandler() {
 					// When the response returned by REST has Http response code
 					// '200'
 					@Override
 					public void onSuccess(int StatusCode, String answer) {
 						// Hide Progress Dialog
-						//prgDialog.hide();
+						// prgDialog.hide();
 						try {
 							// JSON Object
 							JSONObject jO = new JSONObject(answer);
@@ -209,12 +277,10 @@ public class PlanRouteActivity extends FragmentActivity implements
 							if (jO.getBoolean("status")) {
 								Toast.makeText(
 										getApplicationContext(),
-										"You are successfully logged in! Status code: "
-												+ StatusCode, Toast.LENGTH_LONG)
-										.show();
+										"Route succesfully saved " + StatusCode,
+										Toast.LENGTH_LONG).show();
 							}
 						} catch (JSONException e) {
-							// TODO Auto-generated catch block
 							Toast.makeText(
 									getApplicationContext(),
 									"Error Occured [Server's JSON response might be invalid]!",
@@ -230,7 +296,7 @@ public class PlanRouteActivity extends FragmentActivity implements
 					public void onFailure(int statusCode, Throwable error,
 							String content) {
 						// Hide Progress Dialog
-						//prgDialog.hide();
+						// prgDialog.hide();
 						// When Http response code is '404'
 						if (statusCode == 404) {
 							Toast.makeText(getApplicationContext(),
@@ -252,6 +318,75 @@ public class PlanRouteActivity extends FragmentActivity implements
 						}
 					}
 				});
+	}
+
+	private void restInvokeRequest(RequestParams params) {
+		// Show Progress Dialog
+		// prgDialog.show();
+		// Make RESTful webservice call using AsyncHttpClient object
+		System.out.println("PlanRouteActivity: Inside restInvokeRequest");
+		AsyncHttpClient client = new AsyncHttpClient();
+		client.get(domainAdress + REQUEST_ROUTE, params,
+				new AsyncHttpResponseHandler() {
+					// When the response returned by REST has Http response code
+					// '200'
+					@Override
+					public void onSuccess(int StatusCode, String answer) {
+						System.out.println("Recived string from server: "
+								+ answer);
+						convertFromJson(answer);
+					}
+
+					// When the response returned by REST has Http response code
+					// other than '200'
+					@Override
+					public void onFailure(int statusCode, Throwable error,
+							String content) {
+						// Hide Progress Dialog
+						// prgDialog.hide();
+						// When Http response code is '404'
+						if (statusCode == 404) {
+							Toast.makeText(getApplicationContext(),
+									"Requested resource not found",
+									Toast.LENGTH_LONG).show();
+						}
+						// When Http response code is '500'
+						else if (statusCode == 500) {
+							Toast.makeText(getApplicationContext(),
+									"Something went wrong at server end",
+									Toast.LENGTH_LONG).show();
+						}
+						// When Http response code other than 404, 500
+						else {
+							Toast.makeText(
+									getApplicationContext(),
+									"Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]",
+									Toast.LENGTH_LONG).show();
+						}
+					}
+				});
+	}
+
+	private void saveRoute() {
+		//Fill route object
+		// route.setId((long) 666);
+		route.setAutor(prefs.getLogin());
+		route.setCity("London");
+		route.setDescription("asd qwe zxc ghj");
+		// Instantiate Http Request Param Object
+		RequestParams params = new RequestParams();
+		// String login=prefs.getString(USER_LOGIN, "");
+		params.put("login", prefs.getLogin());
+		params.put("sessionId", "q");
+		params.put("route", convertToJson());
+		restInvoke(params);
+	}
+
+	private void requestRoute() {
+		RequestParams params = new RequestParams();
+		params.put("autor", "autor");
+		params.put("id", "451");
+		restInvokeRequest(params);
 	}
 
 	// LISTENERS
