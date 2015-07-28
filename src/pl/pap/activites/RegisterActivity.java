@@ -133,9 +133,9 @@ public class RegisterActivity extends Activity implements Consts {
 							}
 							// Else display error message
 							else {
-								tvErrorMsg.setText(jO.getString("error_msg"));
+								tvErrorMsg.setText(jO.getString("errorMessage"));
 								Toast.makeText(getApplicationContext(),
-										jO.getString("error_msg"),
+										jO.getString("errorMessage"),
 										Toast.LENGTH_LONG).show();
 							}
 						} catch (JSONException e) {

@@ -142,15 +142,16 @@ public class LoginActivity extends Activity implements Consts {
 								String p = etPwd.getText().toString();
 								editor.putString(USER_LOGIN, u);
 								editor.putString(USER_PASS, p);
+								editor.putString(USER_SESSINID, u);
 								editor.commit();
 								// Navigate to Home screen
 								navigateToHomeActivity();
 							}
 							// Else display error message
 							else {
-								tvErrorMsg.setText(jO.getString("error_msg"));
+								tvErrorMsg.setText(jO.getString("errorMessage"));
 								Toast.makeText(getApplicationContext(),
-										jO.getString("error_msg"),
+										jO.getString("errorMessage"),
 										Toast.LENGTH_LONG).show();
 							}
 						} catch (JSONException e) {

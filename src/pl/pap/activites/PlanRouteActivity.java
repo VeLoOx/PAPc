@@ -1,14 +1,5 @@
 package pl.pap.activites;
 
-import java.io.IOException;
-import java.io.StringWriter;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -18,13 +9,10 @@ import pl.pap.maps.MapsMethods;
 import pl.pap.maps.MapsSettings;
 import pl.pap.model.MarkerModel;
 import pl.pap.model.Route;
-import pl.pap.model.Test;
 import pl.pap.utils.Consts;
 import pl.pap.utils.SharedPrefsUtils;
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
@@ -59,7 +47,6 @@ public class PlanRouteActivity extends FragmentActivity implements
 	MapsSettings maps;
 	Route route;// = new Route();
 	JSONObject jsonMarker;
-	StringWriter swMarker;
 	SharedPrefsUtils prefs;
 
 	@Override
@@ -75,11 +62,6 @@ public class PlanRouteActivity extends FragmentActivity implements
 			maps = new MapsSettings(googleMap);
 			googleMap = maps.setUpMap();
 			setUpListeners();
-			fillMap();
-			// setUpMap();
-			// prefs = this.getSharedPreferences(
-			// Consts.PREFS, Context.MODE_PRIVATE);
-			// Creating SharedPrefsUtils object
 			prefs = new SharedPrefsUtils(this);
 
 		} catch (Exception e) {
@@ -233,7 +215,7 @@ public class PlanRouteActivity extends FragmentActivity implements
 		Route routeModel = gson.fromJson(json, Route.class);
 		System.out.println("GSON: String: " + route);
 		System.out.println(routeModel);
-		System.out.println(routeModel.getAutor());
+		System.out.println(routeModel.getAuthor());
 		System.out.println("rozmiar mapy markerow "
 				+ routeModel.getMarkerMap().size());
 		for (MarkerModel value : routeModel.getMarkerMap().values()) {
@@ -259,7 +241,7 @@ public class PlanRouteActivity extends FragmentActivity implements
 		// Show Progress Dialog
 		// prgDialog.show();
 		// Make RESTful webservice call using AsyncHttpClient object
-		System.out.println("PlanRouteActivity: Inside restInvoke");
+		//System.out.println("PlanRouteActivity: Inside restInvoke");
 		AsyncHttpClient client = new AsyncHttpClient();
 		client.get(domainAdress + PERSIST_ROUTE, params,
 				new AsyncHttpResponseHandler() {
@@ -278,6 +260,11 @@ public class PlanRouteActivity extends FragmentActivity implements
 								Toast.makeText(
 										getApplicationContext(),
 										"Route succesfully saved " + StatusCode,
+										Toast.LENGTH_LONG).show();
+							}else{
+								Toast.makeText(
+										getApplicationContext(),
+										jO.getString("errorMessage") + StatusCode,
 										Toast.LENGTH_LONG).show();
 							}
 						} catch (JSONException e) {
@@ -326,15 +313,35 @@ public class PlanRouteActivity extends FragmentActivity implements
 		// Make RESTful webservice call using AsyncHttpClient object
 		System.out.println("PlanRouteActivity: Inside restInvokeRequest");
 		AsyncHttpClient client = new AsyncHttpClient();
+		System.out.println(domainAdress + REQUEST_ROUTE);
 		client.get(domainAdress + REQUEST_ROUTE, params,
 				new AsyncHttpResponseHandler() {
 					// When the response returned by REST has Http response code
 					// '200'
 					@Override
 					public void onSuccess(int StatusCode, String answer) {
-						System.out.println("Recived string from server: "
-								+ answer);
-						convertFromJson(answer);
+						try {
+							JSONObject jO = new JSONObject(answer);
+							if (jO.getBoolean("status")) {
+								System.out
+										.println("Recived string from server: "
+												+ answer);
+								System.out.println("Data from serwer: "
+										+ jO.getString("data"));
+								convertFromJson(jO.getString("data"));
+							}else{
+								Toast.makeText(
+										getApplicationContext(),
+										jO.getString("errorMessage"),
+										Toast.LENGTH_LONG).show();
+							}
+						} catch (JSONException e) {
+							Toast.makeText(
+									getApplicationContext(),
+									"Error Occured [Server's JSON response might be invalid]!",
+									Toast.LENGTH_LONG).show();
+							e.printStackTrace();
+						}
 					}
 
 					// When the response returned by REST has Http response code
@@ -368,24 +375,26 @@ public class PlanRouteActivity extends FragmentActivity implements
 	}
 
 	private void saveRoute() {
-		//Fill route object
+		// Fill route object
 		// route.setId((long) 666);
-		route.setAutor(prefs.getLogin());
+		route.setAuthor(prefs.getLogin());
 		route.setCity("London");
 		route.setDescription("asd qwe zxc ghj");
 		// Instantiate Http Request Param Object
 		RequestParams params = new RequestParams();
 		// String login=prefs.getString(USER_LOGIN, "");
 		params.put("login", prefs.getLogin());
-		params.put("sessionId", "q");
+		params.put("sessionId", prefs.getSessionID());
 		params.put("route", convertToJson());
 		restInvoke(params);
 	}
 
 	private void requestRoute() {
 		RequestParams params = new RequestParams();
-		params.put("autor", "autor");
-		params.put("id", "451");
+		params.put("login", prefs.getLogin());
+		params.put("sessionId", prefs.getSessionID());
+		params.put("autor", prefs.getLogin());
+		params.put("id", "71");
 		restInvokeRequest(params);
 	}
 

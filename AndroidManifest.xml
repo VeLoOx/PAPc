@@ -12,13 +12,14 @@
         android:name="pl.pap.client.permission.MAPS_RECEIVE"
         android:protectionLevel="signature" />
 
-    <uses-permission android:name="com.example.hellomaps.permission.MAPS_RECEIVE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!--
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    
 
     <uses-feature
         android:glEsVersion="0x00020000"
@@ -27,8 +28,7 @@
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
-        >
+        android:label="@string/app_name" >
         <activity
             android:name="pl.pap.activites.LoginActivity"
             android:label="@string/app_name" >
@@ -56,8 +56,8 @@
 
         <activity
             android:name="pl.pap.activites.PlanRouteActivity"
-            android:label="@string/title_activity_map"
             android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_map"
             android:parentActivityName="pl.pap.activites.HomeActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

@@ -1,14 +1,13 @@
 package pl.pap.model;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class Route {
 	private long ID;
-	private String autor;
+	private String author;
+	private String name;
 	private String description;
 	private String city;
 	//private ArrayList<Marker> markerList = new ArrayList<Marker>();
@@ -68,13 +67,6 @@ public class Route {
 		this.ID = ID;
 	}
 
-	public String getAutor() {
-		return autor;
-	}
-
-	public void setAutor(String autor) {
-		this.autor = autor;
-	}
 
 	public String getDescription() {
 		return description;
@@ -90,6 +82,22 @@ public class Route {
 
 	public void setCity(String city) {
 		this.city = city;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getAuthor() {
+		return author;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
 	}
 
 }

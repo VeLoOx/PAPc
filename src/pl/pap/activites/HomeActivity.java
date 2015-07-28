@@ -48,7 +48,7 @@ public class HomeActivity extends Activity implements Consts,
 		prgDialog = new ProgressDialog(this);
 		prgDialog.setMessage("Loading...");
 		prgDialog.setCancelable(false);
-		restInvoke(null);
+		//restInvoke(null);
 
 		// action bar
 		actionBar = getActionBar();

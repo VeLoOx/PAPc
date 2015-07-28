@@ -1,8 +1,17 @@
 package pl.pap.activites;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import pl.pap.client.R;
 import pl.pap.dialogs.DescriptionDialog;
 import pl.pap.dialogs.MarkerDialog;
+import pl.pap.maps.MapsMethods;
+import pl.pap.maps.MapsSettings;
+import pl.pap.model.MarkerModel;
+import pl.pap.model.Route;
+import pl.pap.utils.Consts;
+import pl.pap.utils.SharedPrefsUtils;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -15,6 +24,10 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
@@ -28,20 +41,35 @@ import android.view.View;
 import android.widget.Toast;
 
 public class ShowRouteActivity extends FragmentActivity implements
-OnMapLongClickListener, OnMapClickListener, OnMarkerDragListener,
-OnMarkerClickListener, MarkerDialog.MarkerDialogListener { 
-	
+		OnMapLongClickListener, OnMapClickListener, OnMarkerDragListener,
+		OnMarkerClickListener, MarkerDialog.MarkerDialogListener, MapsMethods,
+		Consts {
+
 	private GoogleMap googleMap;
 	DescriptionDialog dDialog = new DescriptionDialog();
 	MarkerDialog mDialog = new MarkerDialog();
 	Marker currentMarker;
+	MapsSettings maps;
+	Route route;// = new Route();
+	JSONObject jsonMarker;
+	SharedPrefsUtils prefs;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.show_route);
 		initilizeMap();
-		setUpMap();
+		// Set up map methods
+		maps = new MapsSettings(googleMap);
+		googleMap = maps.setUpMap();
+		setUpListeners();
+		prefs = new SharedPrefsUtils(this);
+		Bundle extras = getIntent().getExtras();
+		if (extras != null) {
+		    String value = extras.getString("routeId");
+		    requestRoute(value);
+		}
+		
 	}
 
 	@Override
@@ -62,8 +90,7 @@ OnMarkerClickListener, MarkerDialog.MarkerDialogListener {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
-	
+
 	/**
 	 * function to load map If map is not created it will create it for you
 	 * */
@@ -81,53 +108,46 @@ OnMarkerClickListener, MarkerDialog.MarkerDialogListener {
 			}
 		}
 	}
-	
-	private void setUpMap() {
 
-		// Map listeners
-		googleMap.setOnMapClickListener(this);
-		googleMap.setOnMapLongClickListener(this);
-		googleMap.setOnMarkerClickListener(this);
-
-		// Changing map type
-		googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-		// googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-		// googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-		// googleMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
-		// googleMap.setMapType(GoogleMap.MAP_TYPE_NONE);
-
-		// Showing / hiding your current location
-		googleMap.setMyLocationEnabled(true);
-
-		// Enable / Disable zooming controls
-		googleMap.getUiSettings().setZoomControlsEnabled(false);
-
-		// Enable / Disable my location button
-		googleMap.getUiSettings().setMyLocationButtonEnabled(true);
-
-		// Enable / Disable Compass icon
-		googleMap.getUiSettings().setCompassEnabled(true);
-
-		// Enable / Disable Rotate gesture
-		googleMap.getUiSettings().setRotateGesturesEnabled(true);
-
-		// Enable / Disable zooming functionality
-		googleMap.getUiSettings().setZoomGesturesEnabled(true);
-
-		double latitude = 50.06024329985517;
-		double longitude = 19.937569051980972;
-
-		CameraPosition cameraPosition = new CameraPosition.Builder()
-				.target(new LatLng(latitude, longitude)).zoom(15).build();
-
-		googleMap.animateCamera(CameraUpdateFactory
-				.newCameraPosition(cameraPosition));
-	}
-	
-	public void showDescription(View view){
+	public void showDescription(View view) {
 		dDialog.show(getSupportFragmentManager(), "DescriptionDialog");
 	}
-	
+
+	private void requestRoute(String routeId) {
+		RequestParams params = new RequestParams();
+		params.put("login", prefs.getLogin());
+		params.put("sessionId", prefs.getSessionID());
+		params.put("autor", prefs.getLogin());
+		params.put("id", routeId);
+		restInvokeRequest(params);
+	}
+
+	private void convertFromJson(String json) {
+		Gson gson = new Gson();
+		Route routeModel = gson.fromJson(json, Route.class);
+		System.out.println("GSON: String: " + route);
+		System.out.println(routeModel);
+		System.out.println(routeModel.getAuthor());
+		System.out.println("rozmiar mapy markerow "
+				+ routeModel.getMarkerMap().size());
+		for (MarkerModel value : routeModel.getMarkerMap().values()) {
+			// System.out.println("ID "+(MarkerModel)value.toString());
+			System.out.println(value.getTitle());
+		}
+		route=routeModel;
+	}
+
+	private void fillMap() {
+		if (route != null) {
+			System.out.println("Marker map size " + route.getMarkerMap());
+			for (Object value : route.getMarkerMap().values()) {
+				googleMap.addMarker(route
+						.convertToMarkerOptions((MarkerModel) value));
+			}
+		} else
+			System.out.println("Route empty");
+	}
+
 	@Override
 	public boolean onMarkerClick(Marker mark) {
 		/*
@@ -193,12 +213,109 @@ OnMarkerClickListener, MarkerDialog.MarkerDialogListener {
 	@Override
 	public void onDialogPositiveClick(DialogFragment dialog) {
 		currentMarker.setTitle(mDialog.markerTitle);
-		
+
 	}
 
 	@Override
 	public void onDialogNegativeClick(DialogFragment dialog) {
 		// TODO Auto-generated method stub
-		
+
+	}
+
+	@Override
+	public void initializeMap() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setUpListeners() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void addMarker(LatLng point) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void deleteMarker() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public boolean updateMarkers(Marker marker) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private void restInvokeRequest(RequestParams params) {
+		// Show Progress Dialog
+		// prgDialog.show();
+		// Make RESTful webservice call using AsyncHttpClient object
+		System.out.println("PlanRouteActivity: Inside restInvokeRequest");
+		AsyncHttpClient client = new AsyncHttpClient();
+		System.out.println(domainAdress + REQUEST_ROUTE);
+		client.get(domainAdress + REQUEST_ROUTE, params,
+				new AsyncHttpResponseHandler() {
+					// When the response returned by REST has Http response code
+					// '200'
+					@Override
+					public void onSuccess(int StatusCode, String answer) {
+						try {
+							JSONObject jO = new JSONObject(answer);
+							if (jO.getBoolean("status")) {
+								System.out
+										.println("Recived string from server: "
+												+ answer);
+								System.out.println("Data from serwer: "
+										+ jO.getString("data"));
+								convertFromJson(jO.getString("data"));
+								fillMap();
+							} else {
+								Toast.makeText(getApplicationContext(),
+										jO.getString("errorMessage"),
+										Toast.LENGTH_LONG).show();
+							}
+						} catch (JSONException e) {
+							Toast.makeText(
+									getApplicationContext(),
+									"Error Occured [Server's JSON response might be invalid]!",
+									Toast.LENGTH_LONG).show();
+							e.printStackTrace();
+						}
+					}
+
+					// When the response returned by REST has Http response code
+					// other than '200'
+					@Override
+					public void onFailure(int statusCode, Throwable error,
+							String content) {
+						// Hide Progress Dialog
+						// prgDialog.hide();
+						// When Http response code is '404'
+						if (statusCode == 404) {
+							Toast.makeText(getApplicationContext(),
+									"Requested resource not found",
+									Toast.LENGTH_LONG).show();
+						}
+						// When Http response code is '500'
+						else if (statusCode == 500) {
+							Toast.makeText(getApplicationContext(),
+									"Something went wrong at server end",
+									Toast.LENGTH_LONG).show();
+						}
+						// When Http response code other than 404, 500
+						else {
+							Toast.makeText(
+									getApplicationContext(),
+									"Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]",
+									Toast.LENGTH_LONG).show();
+						}
+					}
+				});
 	}
 }
