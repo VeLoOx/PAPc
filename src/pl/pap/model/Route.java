@@ -17,7 +17,7 @@ public class Route {
 	public MarkerOptions convertToMarkerOptions(MarkerModel markerM) {
 
 		return new MarkerOptions().position(markerM.getPosition()).title(
-				markerM.getTitle());
+				markerM.getTitle()).snippet(markerM.getSnippet());
 	}
 
 	/*public boolean addMarkerToList(Marker marker) {

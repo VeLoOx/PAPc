@@ -18,6 +18,7 @@ import pl.pap.model.Route;
 import pl.pap.routeslist.adapter.RouteListAdapter;
 import pl.pap.utils.Consts;
 import pl.pap.utils.SharedPrefsUtils;
+import pl.pap.utils.Utility;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -140,6 +141,7 @@ public class ChooseRouteActivity extends Activity implements Consts {
 								System.out.println("Data from serwer: "
 										+ jO.getString("data"));
 								convertFromJson(jO.getString("data"));
+								//Utility.convertRouteFromJson(jO.getString("data"));
 								populateList();
 							} else {
 								Toast.makeText(getApplicationContext(),

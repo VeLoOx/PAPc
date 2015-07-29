@@ -5,6 +5,7 @@ import org.json.JSONObject;
 
 import pl.pap.client.R;
 import pl.pap.utils.Consts;
+import pl.pap.utils.SharedPrefsUtils;
 import pl.pap.utils.Utility;
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -31,12 +32,15 @@ public class LoginActivity extends Activity implements Consts {
 	EditText etEmail;
 	// Password Edit View Object
 	EditText etPwd;
-	SharedPreferences sharedpreferences;
+	//SharedPreferences sharedpreferences;
+	SharedPrefsUtils prefs;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.login);
+		//Shared prefs
+		prefs = new SharedPrefsUtils(this);
 		// Find Error Msg Text View control by ID
 		tvErrorMsg = (TextView) findViewById(R.id.login_error);
 		// Find Email Edit View control by ID
@@ -55,9 +59,9 @@ public class LoginActivity extends Activity implements Consts {
 	@Override
 	protected void onResume() {
 		// prgDialog.show();
-		sharedpreferences = getSharedPreferences(Consts.PREFS, Context.MODE_PRIVATE);
-		if (sharedpreferences.contains(USER_LOGIN)
-				&& sharedpreferences.contains(USER_PASS)) {
+		//sharedpreferences = getSharedPreferences(Consts.PREFS, Context.MODE_PRIVATE);
+		if (prefs.checkLogin()
+				&& prefs.checkPassword()) {
 
 			// Intent i = new Intent(this, HomeActivity.class);
 			// startActivity(i);
@@ -137,13 +141,16 @@ public class LoginActivity extends Activity implements Consts {
 												+ StatusCode, Toast.LENGTH_LONG)
 										.show();
 
-								Editor editor = sharedpreferences.edit();
+								//Editor editor = sharedpreferences.edit();
 								String u = etEmail.getText().toString();
 								String p = etPwd.getText().toString();
-								editor.putString(USER_LOGIN, u);
+								/*editor.putString(USER_LOGIN, u);
 								editor.putString(USER_PASS, p);
 								editor.putString(USER_SESSINID, u);
-								editor.commit();
+								editor.commit();*/
+								prefs.setLogin(u);
+								prefs.setPassword(p);
+								prefs.setSessionID(u);
 								// Navigate to Home screen
 								navigateToHomeActivity();
 							}

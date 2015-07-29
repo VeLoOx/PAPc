@@ -3,6 +3,11 @@ package pl.pap.utils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import pl.pap.model.MarkerModel;
+import pl.pap.model.Route;
+
+import com.google.gson.Gson;
+
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
@@ -53,5 +58,20 @@ public class Utility {
             }
         }
         return "";
+    }
+    
+    public static String convertToJson(Object obj){
+    	Gson gson = new Gson();
+		String ret = "";
+		ret = gson.toJson(obj);
+		System.out.println("Utility:convertToJson: " +ret);
+		return ret;
+    }
+    
+    public static Route convertRouteFromJson(String json){
+    	System.out.println("Utility: convertRouteFromJson");
+    	Gson gson = new Gson();
+		Route route = gson.fromJson(json, Route.class);
+		return route;
     }
 }

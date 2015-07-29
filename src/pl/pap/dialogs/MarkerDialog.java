@@ -21,16 +21,18 @@ import android.widget.EditText;
 public class MarkerDialog extends DialogFragment {
 
 	public interface MarkerDialogListener {
-		public void onDialogPositiveClick(DialogFragment dialog);
+		public void onMarkerDialogPositiveClick(DialogFragment dialog);
 
-		public void onDialogNegativeClick(DialogFragment dialog);
+		public void onMarkerDialogNegativeClick(DialogFragment dialog);
 		
 	}
 
 	MarkerDialogListener mDialogListener;
 	
 	EditText etMarkerTitle;
+	EditText etMarkerSnippet;
 	public String markerTitle;
+	public String markerSnippet;
 	
 	public Button btnDeleteMarker;
 	
@@ -62,15 +64,14 @@ public class MarkerDialog extends DialogFragment {
 		
 		View markDialogView =inflater.inflate(R.layout.dialog_marker, null);
 		etMarkerTitle= (EditText) markDialogView.findViewById(R.id.markerTitle);
+		etMarkerSnippet= (EditText)markDialogView.findViewById(R.id.markerSnippet);
 		
 		btnDeleteMarker=(Button) markDialogView.findViewById(R.id.markerDelete);
 		
-		btnDeleteMarker.setOnClickListener(new OnClickListener() {
-			
+		btnDeleteMarker.setOnClickListener(new OnClickListener() {			
 			@Override
 			public void onClick(View v) {
-				System.out.println("Dialog: delete");
-		
+				System.out.println("Dialog: delete");	
 				isDeletable=true;
 				MarkerDialog.this.getDialog().cancel();
 			}
@@ -85,7 +86,8 @@ public class MarkerDialog extends DialogFragment {
 							@Override
 							public void onClick(DialogInterface dialog, int id) {
 								markerTitle=etMarkerTitle.getText().toString();
-								mDialogListener.onDialogPositiveClick(MarkerDialog.this);
+								markerSnippet=etMarkerSnippet.getText().toString();
+								mDialogListener.onMarkerDialogPositiveClick(MarkerDialog.this);
 								System.out.println("Dialog: positive click");
 							}
 						})
@@ -93,7 +95,7 @@ public class MarkerDialog extends DialogFragment {
 						new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int id) {
 								System.out.println("Dialog: negative click");
-								mDialogListener.onDialogNegativeClick(MarkerDialog.this);
+								mDialogListener.onMarkerDialogNegativeClick(MarkerDialog.this);
 								MarkerDialog.this.getDialog().cancel();
 							}
 						});

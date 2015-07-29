@@ -182,13 +182,13 @@ public class StartNewRouteActivity extends FragmentActivity implements
 	}
 
 	@Override
-	public void onDialogPositiveClick(DialogFragment dialog) {
+	public void onMarkerDialogPositiveClick(DialogFragment dialog) {
 		currentMarker.setTitle(mDialog.markerTitle);
 		
 	}
 
 	@Override
-	public void onDialogNegativeClick(DialogFragment dialog) {
+	public void onMarkerDialogNegativeClick(DialogFragment dialog) {
 		// TODO Auto-generated method stub
 		
 	}

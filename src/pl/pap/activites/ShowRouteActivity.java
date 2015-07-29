@@ -12,6 +12,7 @@ import pl.pap.model.MarkerModel;
 import pl.pap.model.Route;
 import pl.pap.utils.Consts;
 import pl.pap.utils.SharedPrefsUtils;
+import pl.pap.utils.Utility;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -211,13 +212,13 @@ public class ShowRouteActivity extends FragmentActivity implements
 	}
 
 	@Override
-	public void onDialogPositiveClick(DialogFragment dialog) {
+	public void onMarkerDialogPositiveClick(DialogFragment dialog) {
 		currentMarker.setTitle(mDialog.markerTitle);
 
 	}
 
 	@Override
-	public void onDialogNegativeClick(DialogFragment dialog) {
+	public void onMarkerDialogNegativeClick(DialogFragment dialog) {
 		// TODO Auto-generated method stub
 
 	}
@@ -273,7 +274,8 @@ public class ShowRouteActivity extends FragmentActivity implements
 												+ answer);
 								System.out.println("Data from serwer: "
 										+ jO.getString("data"));
-								convertFromJson(jO.getString("data"));
+								//convertFromJson(jO.getString("data"));
+								route=Utility.convertRouteFromJson(jO.getString("data"));
 								fillMap();
 							} else {
 								Toast.makeText(getApplicationContext(),

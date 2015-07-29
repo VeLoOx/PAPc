@@ -1,31 +1,60 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
 
-    <LinearLayout
-        android:layout_width="fill_parent"
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="10dip" >
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:textSize="25sp"
+        android:textAlignment="center"
+        android:text="@string/markerinfo" />
 
-        <EditText
-            android:id="@+id/markerTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:layout_marginLeft="4dp"
-            android:layout_marginRight="4dp"
-            android:layout_marginTop="16dp"
-            android:hint="@string/title"
-            android:inputType="text" />
+    <EditText
+        android:id="@+id/markerSnippet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/markerTitle"
+        android:ems="10"
+        android:hint="@string/snippet"
+        android:inputType="text" />
 
-        <Button
-            android:id="@+id/markerDelete"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#A10000"
-            android:text="@string/delete" />
-    </LinearLayout>
+    <EditText
+        android:id="@+id/markerTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/textView1"
+        android:ems="10"
+        android:hint="@string/title"
+        android:inputType="text" />
 
-</ScrollView>
+    <Button
+        android:id="@+id/markerDelete"
+        android:layout_width="86dp"
+        android:layout_height="33dp"
+        android:layout_below="@+id/markerSnippet"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="6dp"
+        android:background="#A10000"
+        android:text="@string/delete" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/markerDelete"
+        android:text="" />
+
+</RelativeLayout>
