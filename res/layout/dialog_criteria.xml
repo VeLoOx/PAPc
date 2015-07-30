@@ -1,0 +1,65 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <CheckBox
+        android:id="@+id/cbCity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="7dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/criteriacity" />
+
+    <EditText
+        android:id="@+id/etCriteriaCity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/cbCity"
+        android:layout_marginRight="5dp"
+        android:layout_toRightOf="@+id/rgSelectMode"
+        android:ems="10" >
+    </EditText>
+
+    <CheckBox
+        android:id="@+id/cbAuthor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/cbCity"
+        android:layout_below="@+id/cbCity"
+        android:layout_marginTop="7dp"
+        android:text="@string/criteriaauthor" />
+
+    <RadioGroup
+        android:id="@+id/rgSelectMode"
+        android:layout_below="@+id/cbAuthor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="7dp">
+
+        <RadioButton
+            android:id="@+id/rbShowyMy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"    
+            android:text="@string/criteriashowmy" />
+
+        <RadioButton
+            android:id="@+id/rbShowAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/criteriashowall" />
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/etCriteriaAuthor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/cbAuthor"
+        android:layout_toRightOf="@+id/rgSelectMode"
+        android:ems="10" >
+    </EditText>
+
+</RelativeLayout>

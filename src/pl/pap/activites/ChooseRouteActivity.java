@@ -13,6 +13,7 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 import pl.pap.client.R;
+import pl.pap.dialogs.CriteriaDialog;
 import pl.pap.model.MarkerModel;
 import pl.pap.model.Route;
 import pl.pap.routeslist.adapter.RouteListAdapter;
@@ -22,21 +23,30 @@ import pl.pap.utils.Utility;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.RadioButton;
 import android.widget.Toast;
 
-public class ChooseRouteActivity extends Activity implements Consts {
+public class ChooseRouteActivity extends FragmentActivity implements Consts,
+		CriteriaDialog.CriteriaDialogListener {
 
 	private ListView listView;
 	private RouteListAdapter adapter;
 	Route route;
 	List<Route> routesList;
 	SharedPrefsUtils prefs;
+	Button btnSearch;
+	CriteriaDialog cDialog;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +55,16 @@ public class ChooseRouteActivity extends Activity implements Consts {
 		//
 		prefs = new SharedPrefsUtils(this);
 		requestRoutesList();
+		//
+		btnSearch = (Button) this.findViewById(R.id.btnSearch);
+		btnSearch.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				showCriteriaDialog();
+
+			}
+		});
 		//
 
 	}
@@ -66,6 +86,45 @@ public class ChooseRouteActivity extends Activity implements Consts {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	private void showCriteriaDialog() {
+		cDialog = new CriteriaDialog();
+		FragmentManager fragMan = getSupportFragmentManager();
+		cDialog.show(fragMan, "saveRouteDialog");
+	}
+
+	private void selectCriteria() {
+		System.out.println("selectCriteria");
+
+		if (cDialog.cbAuthor.isChecked() && cDialog.cbCity.isChecked()) {
+			System.out.println("Both Checked");
+			return;
+		} else {
+			if (cDialog.cbAuthor.isChecked()) {
+				System.out.println("Author Checked");
+				return;
+			}
+
+			if (cDialog.cbCity.isChecked()) {
+				System.out.println("City Checked");
+				return;
+			}
+		}
+		
+		int selectedRadio;
+		selectedRadio = cDialog.rgSelectMode.getCheckedRadioButtonId();
+		
+		if (cDialog.rbShowMy.getId()==selectedRadio) {
+			System.out.println("Radion ShowMy");
+			return;
+		}
+
+		if (cDialog.rbShowAll.getId()==selectedRadio) {
+			System.out.println("Radio ShowAll");
+			return;
+		}
+
 	}
 
 	private void convertFromJson(String json) {
@@ -141,7 +200,7 @@ public class ChooseRouteActivity extends Activity implements Consts {
 								System.out.println("Data from serwer: "
 										+ jO.getString("data"));
 								convertFromJson(jO.getString("data"));
-								//Utility.convertRouteFromJson(jO.getString("data"));
+								// Utility.convertRouteFromJson(jO.getString("data"));
 								populateList();
 							} else {
 								Toast.makeText(getApplicationContext(),
@@ -193,6 +252,18 @@ public class ChooseRouteActivity extends Activity implements Consts {
 		showRouteIntent.putExtra("routeId", routeId);
 		showRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(showRouteIntent);
+
+	}
+
+	@Override
+	public void onCriteriaDialogPositiveClick(DialogFragment dialog) {
+		selectCriteria();
+
+	}
+
+	@Override
+	public void onCriteriaDialogNegativeClick(DialogFragment dialog) {
+		// TODO Auto-generated method stub
 
 	}
 }

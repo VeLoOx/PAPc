@@ -48,5 +48,12 @@
     <string name="neww">New</string>
     <string name="save">Save</string>
     <string name="info">Info</string>
+    <!-- show criteria dialog -->
+    <string name="criteriacity">City</string>
+    <string name="criteriaauthor">Author</string>
+    <string name="criteriashowmy">Show my routes</string>
+    <string name="criteriashowall">Show all routes</string>
+    <string name="select">Select</string>
+    <!--  -->
 
 </resources>
