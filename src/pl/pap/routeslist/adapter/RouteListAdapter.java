@@ -34,9 +34,11 @@ public class RouteListAdapter extends ArrayAdapter<Route> {
 
 			TextView routeAutor = (TextView) v.findViewById(R.id.route_author);
 			TextView routeName = (TextView) v.findViewById(R.id.route_name);
+			TextView routeCity= (TextView) v.findViewById(R.id.route_city);
 
 			routeAutor.setText(item.getAuthor());
 			routeName.setText(item.getName());
+			routeCity.setText(item.getCity());
 
 			return v;
 		} catch (Exception ex) {

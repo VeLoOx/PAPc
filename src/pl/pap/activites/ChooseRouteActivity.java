@@ -44,6 +44,7 @@ public class ChooseRouteActivity extends FragmentActivity implements Consts,
 	private RouteListAdapter adapter;
 	Route route;
 	List<Route> routesList;
+	List<Route> appliedCriteriaList;
 	SharedPrefsUtils prefs;
 	Button btnSearch;
 	CriteriaDialog cDialog;
@@ -99,32 +100,90 @@ public class ChooseRouteActivity extends FragmentActivity implements Consts,
 
 		if (cDialog.cbAuthor.isChecked() && cDialog.cbCity.isChecked()) {
 			System.out.println("Both Checked");
+			applyCriteriaBoth(cDialog.criteriaAuthor, cDialog.criteriaCity);
+			adapter.clear();
+			adapter.addAll(appliedCriteriaList);
 			return;
 		} else {
 			if (cDialog.cbAuthor.isChecked()) {
 				System.out.println("Author Checked");
+				applyCriteriaAuthor(cDialog.criteriaAuthor);
+				adapter.clear();
+				adapter.addAll(appliedCriteriaList);
 				return;
 			}
 
 			if (cDialog.cbCity.isChecked()) {
 				System.out.println("City Checked");
+				applyCriteriaCity(cDialog.criteriaCity);
+				adapter.clear();
+				adapter.addAll(appliedCriteriaList);
 				return;
 			}
 		}
-		
+
 		int selectedRadio;
 		selectedRadio = cDialog.rgSelectMode.getCheckedRadioButtonId();
-		
-		if (cDialog.rbShowMy.getId()==selectedRadio) {
+
+		if (cDialog.rbShowMy.getId() == selectedRadio) {
 			System.out.println("Radion ShowMy");
+			applyCriteriaAuthor(prefs.getLogin());
+			adapter.clear();
+			adapter.addAll(appliedCriteriaList);
 			return;
 		}
 
-		if (cDialog.rbShowAll.getId()==selectedRadio) {
+		if (cDialog.rbShowAll.getId() == selectedRadio) {
 			System.out.println("Radio ShowAll");
+			adapter.clear();
+			adapter.addAll(routesList);
 			return;
 		}
 
+	}
+
+	private void applyCriteriaBoth(String author, String city) {
+		appliedCriteriaList = new ArrayList<Route>();
+		if (Utility.isNotNull(author) && Utility.isNotNull(city)) {
+			for (Route value : routesList) {
+				if (value.getAuthor().equals(author)
+						&& value.getCity().equals(city)) {
+					appliedCriteriaList.add(value);
+					System.out.println("applied " + value.getAuthor() + " "
+							+ value.getCity());
+				}
+			}
+		} else
+			Toast.makeText(getApplicationContext(), R.string.cantbenull,
+					Toast.LENGTH_LONG).show();
+	}
+
+	private void applyCriteriaAuthor(String author) {
+		appliedCriteriaList = new ArrayList<Route>();
+		if (Utility.isNotNull(author)) {
+			for (Route value : routesList) {
+				if (value.getAuthor().equals(author)) {
+					appliedCriteriaList.add(value);
+					System.out.println("applied " + value.getAuthor());
+				}
+			}
+		} else
+			Toast.makeText(getApplicationContext(), R.string.cantbenull,
+					Toast.LENGTH_LONG).show();
+	}
+
+	private void applyCriteriaCity(String city) {
+		appliedCriteriaList = new ArrayList<Route>();
+		if (Utility.isNotNull(city)) {
+			for (Route value : routesList) {
+				if (value.getCity().equals(city)) {
+					appliedCriteriaList.add(value);
+					System.out.println("applied " + value.getCity());
+				}
+			}
+		} else
+			Toast.makeText(getApplicationContext(), R.string.cantbenull,
+					Toast.LENGTH_LONG).show();
 	}
 
 	private void convertFromJson(String json) {
@@ -133,11 +192,12 @@ public class ChooseRouteActivity extends FragmentActivity implements Consts,
 		// routesList = gson.fromJson(json, Route.class);
 		routesList = Arrays.asList(routesArray);
 		// System.out.println("routesList siez "+routesList.size());
-		for (Route value : routesList) {
-			// System.out.println("ID "+(MarkerModel)value.toString());
-			System.out.println("Author: " + value.getAuthor());
-			System.out.println("Name :" + value.getName());
-		}
+		/*
+		 * for (Route value : routesList) { //
+		 * System.out.println("ID "+(MarkerModel)value.toString());
+		 * System.out.println("Author: " + value.getAuthor());
+		 * System.out.println("Name :" + value.getName()); }
+		 */
 	}
 
 	private void requestRoutesList() {
@@ -194,11 +254,13 @@ public class ChooseRouteActivity extends FragmentActivity implements Consts,
 						try {
 							JSONObject jO = new JSONObject(answer);
 							if (jO.getBoolean("status")) {
-								System.out
-										.println("Recived string from server: "
-												+ answer);
-								System.out.println("Data from serwer: "
-										+ jO.getString("data"));
+								/*
+								 * System.out
+								 * .println("Recived string from server: " +
+								 * answer);
+								 * System.out.println("Data from serwer: " +
+								 * jO.getString("data"));
+								 */
 								convertFromJson(jO.getString("data"));
 								// Utility.convertRouteFromJson(jO.getString("data"));
 								populateList();

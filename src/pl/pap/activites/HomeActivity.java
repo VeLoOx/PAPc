@@ -49,6 +49,8 @@ public class HomeActivity extends Activity implements Consts,
 		prgDialog.setMessage("Loading...");
 		prgDialog.setCancelable(false);
 		//restInvoke(null);
+		tvWelcomeBar.setText(tvWelcomeBar.getText() + " "
+				+ sp.getString("loginKey", ""));
 
 		// action bar
 		actionBar = getActionBar();

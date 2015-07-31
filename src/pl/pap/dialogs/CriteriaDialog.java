@@ -33,6 +33,8 @@ public class CriteriaDialog extends DialogFragment {
 	public RadioButton rbShowAll;
 	public RadioButton rbShowMy;
 	public RadioButton rbSelected;
+	public String criteriaCity;
+	public String criteriaAuthor;
 	
 	// Override the Fragment.onAttach() method to instantiate the NoticeDialogListener
     @Override
@@ -84,6 +86,8 @@ public class CriteriaDialog extends DialogFragment {
 								rbSelected=(RadioButton) criteriaDialogView.findViewById(selectedRadio);
 								//System.out.println("Selected radio "+ rbSelected.getText());
 								//rbSelected = (RadioButton) criteriaDialogView.findViewById(selectedRadio);
+								criteriaCity=etCriteriaCity.getText().toString();
+								criteriaAuthor=etCriteriaAuthor.getText().toString();
 								cDialogListener.onCriteriaDialogPositiveClick(CriteriaDialog.this);
 							}
 						})

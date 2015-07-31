@@ -8,5 +8,23 @@
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/showRouteInfoItem"
+        android:orderInCategory="1"
+        android:title="@string/info">
+    </item>
+    <item
+        android:id="@+id/showRouteEditItem"
+        android:enabled="false"
+        android:orderInCategory="2"
+        android:title="@string/edit">
+    </item>
+    
+    <item
+        android:id="@+id/showRouteSaveItem"
+        android:visible="false"
+        android:orderInCategory="3"
+        android:title="@string/save">
+    </item>
 
 </menu>

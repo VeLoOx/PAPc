@@ -47,9 +47,9 @@ public class PlanRouteActivity extends FragmentActivity implements
 
 	// Google Map
 	private GoogleMap googleMap;
-	MarkerDialog mDialog = new MarkerDialog();
-	SaveRouteDialog rDialog;// = new SaveRouteDialog();
 	Marker currentMarker;
+	MarkerDialog mDialog = new MarkerDialog(currentMarker);
+	SaveRouteDialog rDialog;// = new SaveRouteDialog();
 	MapsSettings maps;
 	Route route;// = new Route();
 	JSONObject jsonMarker;
@@ -98,7 +98,7 @@ public class PlanRouteActivity extends FragmentActivity implements
 
 		case R.id.item1:
 			ktoryElement = "New";
-
+			cleanMap();
 			break;
 		case R.id.item2:
 			ktoryElement = "Save";
@@ -114,7 +114,7 @@ public class PlanRouteActivity extends FragmentActivity implements
 			// requestRoute();
 			break;
 		default:
-			ktoryElement = "¿aden";
+			ktoryElement = "none";
 
 		}
 
@@ -168,6 +168,12 @@ public class PlanRouteActivity extends FragmentActivity implements
 		} else
 			System.out.println("Route empty");
 	}
+	
+	private void cleanMap(){
+		googleMap.clear();
+		route= new Route();
+		
+	}
 
 	private void fillRouteInfo() {
 		rDialog = new SaveRouteDialog(route);
@@ -182,10 +188,6 @@ public class PlanRouteActivity extends FragmentActivity implements
 				.title("New Marker");
 		marker.draggable(true);
 		Marker tmp = googleMap.addMarker(marker);
-		// route.addMarkerToList(googleMap.addMarker(marker));
-		// MarkerModel markModel = new MarkerModel();
-		// markModel.copyValues(tmp);
-		// route.addMarkerToMap(markModel.getId(), markModel);
 		persistMarker(tmp);
 		System.out.println("Marker added " + point.latitude + "---"
 				+ point.longitude);
@@ -208,22 +210,12 @@ public class PlanRouteActivity extends FragmentActivity implements
 
 	@Override
 	public boolean updateMarkers(Marker marker) {
-		// if(route.removeMarkerFromMap(marker.getId())){
 		System.out.println("Marker remove and update status: "
 				+ route.removeMarkerFromMap(marker.getId()));
-		// route.addMarkerToMap(marker.getId(), marker);
 		persistMarker(marker);
 		System.out.println("Marker updated");
 		return true;
-		// }
-		// return false;
-	}
 
-	private String convertToJson() {
-		Gson gson = new Gson();
-		String ret = "";
-		ret = gson.toJson(route);
-		return ret;
 	}
 
 	private void convertFromJson(String json) {
@@ -240,18 +232,6 @@ public class PlanRouteActivity extends FragmentActivity implements
 		}
 	}
 
-	private JSONObject convertToJson2() {
-		JSONObject jObject = new JSONObject();
-		try {
-			jObject.put("Marker", currentMarker);
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		// System.out.println(jObject);
-		return jObject;
-
-	}
 
 	private void saveRoute() {
 		// Fill route object
@@ -281,27 +261,12 @@ public class PlanRouteActivity extends FragmentActivity implements
 	// LISTENERS
 	@Override
 	public boolean onMarkerClick(Marker mark) {
-
-		// System.out.println("prev: " + mark.getTitle()); mark.setTitle("asd");
-		// System.out.println("after: " + mark.getTitle());
-
-		// mark.showInfoWindow();
 		deleteMarker();
 		System.out.println(mark.getPosition());
-		mDialog = new MarkerDialog();
 		currentMarker = mark;
+		mDialog = new MarkerDialog(currentMarker);
 		FragmentManager fragMan = getSupportFragmentManager();
 		mDialog.show(fragMan, "markerDialog");
-
-		/*
-		 * mDialog.btnDeleteMarker.setOnClickListener(new View.OnClickListener()
-		 * {
-		 * 
-		 * @Override public void onClick(View v) { currentMarker.remove();
-		 * 
-		 * } });
-		 */
-
 		return false;
 	}
 
@@ -365,7 +330,7 @@ public class PlanRouteActivity extends FragmentActivity implements
 		route.setDescription(rDialog.routeDescription);
 		if (toPersist) {
 			saveRoute();
-			//navigateUpTo(getParentActivityIntent());
+			// navigateUpTo(getParentActivityIntent());
 			navigateToHomeActivity();
 		}
 

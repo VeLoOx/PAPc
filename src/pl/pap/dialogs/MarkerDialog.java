@@ -1,5 +1,7 @@
 package pl.pap.dialogs;
 
+import com.google.android.gms.maps.model.Marker;
+
 import pl.pap.client.R;
 import pl.pap.client.R.id;
 import pl.pap.client.R.layout;
@@ -19,6 +21,10 @@ import android.widget.EditText;
 
 @SuppressLint("NewApi")
 public class MarkerDialog extends DialogFragment {
+	
+	public MarkerDialog(Marker currMarker){
+		this.currMarker=currMarker;
+	}
 
 	public interface MarkerDialogListener {
 		public void onMarkerDialogPositiveClick(DialogFragment dialog);
@@ -28,6 +34,8 @@ public class MarkerDialog extends DialogFragment {
 	}
 
 	MarkerDialogListener mDialogListener;
+	
+	Marker currMarker;
 	
 	EditText etMarkerTitle;
 	EditText etMarkerSnippet;
@@ -65,6 +73,9 @@ public class MarkerDialog extends DialogFragment {
 		View markDialogView =inflater.inflate(R.layout.dialog_marker, null);
 		etMarkerTitle= (EditText) markDialogView.findViewById(R.id.markerTitle);
 		etMarkerSnippet= (EditText)markDialogView.findViewById(R.id.markerSnippet);
+		
+		//etMarkerTitle.setText(currMarker.getTitle());
+		//etMarkerSnippet.setText(currMarker.getSnippet());
 		
 		btnDeleteMarker=(Button) markDialogView.findViewById(R.id.markerDelete);
 		

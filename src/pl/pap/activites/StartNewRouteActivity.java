@@ -31,7 +31,7 @@ public class StartNewRouteActivity extends FragmentActivity implements
 		OnMarkerClickListener, MarkerDialog.MarkerDialogListener {
 
 	private GoogleMap googleMap;
-	MarkerDialog mDialog = new MarkerDialog();
+	MarkerDialog mDialog; 
 	Marker currentMarker;
 
 	@Override
@@ -129,6 +129,7 @@ public class StartNewRouteActivity extends FragmentActivity implements
 	private void deleteMarker(){
 		if (mDialog.isDeletable) {
 			currentMarker.remove();
+			//route.getMarkerMap().remove(currentMarker.getId());
 		}
 	}
 
@@ -136,7 +137,7 @@ public class StartNewRouteActivity extends FragmentActivity implements
 	public boolean onMarkerClick(Marker mark) {
 		deleteMarker();
 		System.out.println(mark.getPosition());
-		mDialog = new MarkerDialog();
+		mDialog = new MarkerDialog(currentMarker);
 		currentMarker = mark;
 		FragmentManager fragMan = getSupportFragmentManager();
 		mDialog.show(fragMan, "markerDialog");
