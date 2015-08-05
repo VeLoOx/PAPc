@@ -19,12 +19,17 @@
         android:orderInCategory="2"
         android:title="@string/edit">
     </item>
-    
     <item
         android:id="@+id/showRouteSaveItem"
-        android:visible="false"
         android:orderInCategory="3"
-        android:title="@string/save">
+        android:title="@string/save"
+        android:visible="false">
+    </item>
+    <item
+        android:id="@+id/showRouteLocation"
+        android:orderInCategory="4"
+        android:title="@string/showUserLocation"
+        android:visible="true">
     </item>
 
 </menu>

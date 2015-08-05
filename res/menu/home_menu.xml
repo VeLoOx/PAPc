@@ -10,12 +10,12 @@
     <item
         android:id="@+id/item1"
         android:orderInCategory="1"
-        android:title="Jeden">
+        android:title="@string/synchronize">
     </item>
     <item
-        android:id="@+id/item3"
-        android:orderInCategory="3"
-        android:title="Trzy">
+        android:id="@+id/item2"
+        android:orderInCategory="2"
+        android:title="2">
     </item>
 
 </menu>

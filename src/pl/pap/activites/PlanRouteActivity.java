@@ -10,7 +10,9 @@ import pl.pap.maps.MapsMethods;
 import pl.pap.maps.MapsSettings;
 import pl.pap.model.MarkerModel;
 import pl.pap.model.Route;
+import pl.pap.utils.ConnectionGuardian;
 import pl.pap.utils.Consts;
+import pl.pap.utils.OfflineModeManager;
 import pl.pap.utils.SharedPrefsUtils;
 import pl.pap.utils.Utility;
 import android.annotation.SuppressLint;
@@ -48,19 +50,26 @@ public class PlanRouteActivity extends FragmentActivity implements
 	// Google Map
 	private GoogleMap googleMap;
 	Marker currentMarker;
-	MarkerDialog mDialog = new MarkerDialog(currentMarker);
-	SaveRouteDialog rDialog;// = new SaveRouteDialog();
 	MapsSettings maps;
 	Route route;// = new Route();
+
+	// Dialogs
+	MarkerDialog mDialog = new MarkerDialog(currentMarker);
+	SaveRouteDialog rDialog;// = new SaveRouteDialog();
+
+	// Utils
 	JSONObject jsonMarker;
 	SharedPrefsUtils prefs;
+	ConnectionGuardian connGuard;
+	OfflineModeManager offManager;
+
 	boolean toPersist = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.plan_route);
-		System.out.println("PlanRouteActivity on create");
+		// System.out.println("PlanRouteActivity on create");
 		try {
 			route = new Route();
 			// Loading map
@@ -70,6 +79,8 @@ public class PlanRouteActivity extends FragmentActivity implements
 			googleMap = maps.setUpMap();
 			setUpListeners();
 			prefs = new SharedPrefsUtils(this);
+			connGuard = new ConnectionGuardian(this);
+			offManager= new OfflineModeManager(this);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -168,11 +179,11 @@ public class PlanRouteActivity extends FragmentActivity implements
 		} else
 			System.out.println("Route empty");
 	}
-	
-	private void cleanMap(){
+
+	private void cleanMap() {
 		googleMap.clear();
-		route= new Route();
-		
+		route = new Route();
+
 	}
 
 	private void fillRouteInfo() {
@@ -232,21 +243,19 @@ public class PlanRouteActivity extends FragmentActivity implements
 		}
 	}
 
-
 	private void saveRoute() {
-		// Fill route object
-		// route.setId((long) 666);
 		route.setAuthor(prefs.getLogin());
-		// route.setCity("London");
-		// route.setDescription("asd qwe zxc ghj");
-		// Instantiate Http Request Param Object
-		RequestParams params = new RequestParams();
-		// String login=prefs.getString(USER_LOGIN, "");
-		params.put("login", prefs.getLogin());
-		params.put("sessionId", prefs.getSessionID());
-		// params.put("route", convertToJson());
-		params.put("route", Utility.convertToJson(route));
-		restInvoke(params);
+		if (connGuard.isConnectedToInternet()) {
+			RequestParams params = new RequestParams();
+			params.put("login", prefs.getLogin());
+			params.put("sessionId", prefs.getSessionID());
+			params.put("route", Utility.convertToJson(route));
+			restInvoke(params);
+		}
+		else {
+		Toast.makeText(getApplicationContext(), R.string.notConnected, Toast.LENGTH_LONG).show();
+		offManager.saveRoute(Utility.convertToJson(route));
+		}
 	}
 
 	private void requestRoute() {
@@ -275,12 +284,6 @@ public class PlanRouteActivity extends FragmentActivity implements
 		System.out.println("Map clicked");
 		// maps.googleMap.animateCamera(CameraUpdateFactory.newLatLng(arg0));
 		deleteMarker();
-		/*
-		 * System.out.println("Marker list size "+
-		 * route.getMarkerList().size()); for(Marker
-		 * marker:route.getMarkerList()){
-		 * googleMap.addMarker(route.convertToMarkerOptions(marker)); }
-		 */
 	}
 
 	@Override
@@ -329,6 +332,7 @@ public class PlanRouteActivity extends FragmentActivity implements
 		route.setCity(rDialog.routeCity);
 		route.setDescription(rDialog.routeDescription);
 		if (toPersist) {
+
 			saveRoute();
 			// navigateUpTo(getParentActivityIntent());
 			navigateToHomeActivity();

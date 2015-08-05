@@ -22,6 +22,6 @@
          android:layout_centerHorizontal="true"
          android:background="#060"
          android:text="@string/addMarker" 
-         android:onClick="addMarker"/>
+         android:onClick="markPosition"/>
 
 </RelativeLayout>

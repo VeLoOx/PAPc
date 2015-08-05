@@ -12,18 +12,29 @@ import pl.pap.maps.MapsMethods;
 import pl.pap.maps.MapsSettings;
 import pl.pap.model.MarkerModel;
 import pl.pap.model.Route;
+import pl.pap.utils.ConnectionGuardian;
 import pl.pap.utils.Consts;
 import pl.pap.utils.SharedPrefsUtils;
 import pl.pap.utils.Utility;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
@@ -41,39 +52,102 @@ public class ShowRouteActivity extends FragmentActivity implements
 		OnMapLongClickListener, OnMapClickListener, OnMarkerDragListener,
 		OnMarkerClickListener, MarkerDialog.MarkerDialogListener,
 		SaveRouteDialog.SaveRouteDialogListener,
-		RouteInfoDialog.RouteInfoDialogListener, MapsMethods, Consts {
+		RouteInfoDialog.RouteInfoDialogListener, MapsMethods, Consts,
+		ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
 
+	// Maps
 	private GoogleMap googleMap;
 	DescriptionDialog dDialog = new DescriptionDialog();
-
+	MapsSettings maps;
+	Route route;// = new Route();
 	Marker currentMarker;
+	// Dialogs
 	MarkerDialog mDialog = new MarkerDialog(currentMarker);
 	SaveRouteDialog rDialog;
 	RouteInfoDialog iDialog;
-	MapsSettings maps;
-	Route route;// = new Route();
+
+	// Utils
 	JSONObject jsonMarker;
 	SharedPrefsUtils prefs;
+	ConnectionGuardian connGuard;
+
 	boolean isAuthor = false;
 	boolean isEditable = false;
 	boolean toPersist = false;
+
+	// Location
+	private Location mLastLocation;
+	private Marker locationMarker;
+
+	// Google client to interact with Google API
+	private GoogleApiClient mGoogleApiClient;
+
+	// boolean flag to toggle periodic location updates
+	private boolean mRequestingLocationUpdates = false;
+
+	private LocationRequest mLocationRequest;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.show_route);
+		// ===============MAPS
 		initializeMap();
 		// Set up map methods
 		maps = new MapsSettings(googleMap);
 		googleMap = maps.setUpMap();
 		setUpListeners();
+		// ===================
 		prefs = new SharedPrefsUtils(this);
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {
 			String value = extras.getString("routeId");
 			requestRoute(value);
 		}
+		// ===============Location
+		// First we need to check availability of play services
+		if (checkPlayServices()) {
 
+			// Building the GoogleApi client
+			buildGoogleApiClient();
+
+			createLocationRequest();
+		}
+
+	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		if (mGoogleApiClient != null) {
+			mGoogleApiClient.connect();
+		}
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		checkPlayServices();
+
+		// Resuming the periodic location updates
+		if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
+			startLocationUpdates();
+		}
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		if (mGoogleApiClient.isConnected()) {
+			mGoogleApiClient.disconnect();
+		}
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		stopLocationUpdates();
 	}
 
 	@Override
@@ -104,18 +178,23 @@ public class ShowRouteActivity extends FragmentActivity implements
 			break;
 		case R.id.showRouteEditItem:
 			ktoryElement = "edit";
-			isEditable=true;
-			//setUpListeners();
+			isEditable = true;
+			// setUpListeners();
 			break;
 		case R.id.showRouteSaveItem:
 			ktoryElement = "save";
 			toPersist = true;
 			fillRouteInfo();
 			break;
+		case R.id.showRouteLocation:
+			ktoryElement = "location";
+			togglePeriodicLocationUpdates();
+
+			break;
 		default:
 			ktoryElement = "none";
 		}
-		
+
 		Toast.makeText(getApplicationContext(), "Element: " + ktoryElement,
 				Toast.LENGTH_LONG).show();
 
@@ -128,7 +207,7 @@ public class ShowRouteActivity extends FragmentActivity implements
 			// menu.clear();
 			menu.findItem(R.id.showRouteEditItem).setEnabled(true);
 		}
-		if (isEditable){
+		if (isEditable) {
 			menu.findItem(R.id.showRouteSaveItem).setVisible(true);
 			menu.findItem(R.id.showRouteEditItem).setEnabled(false);
 		}
@@ -161,7 +240,7 @@ public class ShowRouteActivity extends FragmentActivity implements
 		FragmentManager fragMan = getSupportFragmentManager();
 		iDialog.show(fragMan, "routeInfoDialog");
 	}
-	
+
 	private void fillRouteInfo() {
 		rDialog = new SaveRouteDialog(route);
 		FragmentManager fragMan = getSupportFragmentManager();
@@ -316,15 +395,15 @@ public class ShowRouteActivity extends FragmentActivity implements
 		route.setCity(rDialog.routeCity);
 		route.setDescription(rDialog.routeDescription);
 		if (toPersist) {
-			//saveRoute();
-			//navigateToHomeActivity();
+			// saveRoute();
+			// navigateToHomeActivity();
 			System.out.println("Route is about to be updated");
 			updateRoute();
 			navigateToHomeActivity();
 		}
 
 	}
-	
+
 	@Override
 	public void onSaveRouteDialogNegativeClick(DialogFragment dialog) {
 		// TODO Auto-generated method stub
@@ -338,8 +417,6 @@ public class ShowRouteActivity extends FragmentActivity implements
 		homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(homeIntent);
 	}
-
-	
 
 	private void restInvoke(RequestParams params) {
 		// Show Progress Dialog
@@ -363,8 +440,9 @@ public class ShowRouteActivity extends FragmentActivity implements
 							if (jO.getBoolean("status")) {
 								Toast.makeText(
 										getApplicationContext(),
-										"Route succesfully updated " + StatusCode,
-										Toast.LENGTH_LONG).show();
+										"Route succesfully updated "
+												+ StatusCode, Toast.LENGTH_LONG)
+										.show();
 							} else {
 								Toast.makeText(
 										getApplicationContext(),
@@ -476,6 +554,161 @@ public class ShowRouteActivity extends FragmentActivity implements
 						}
 					}
 				});
+	}
+
+	/**
+	 * Method to display the location on UI
+	 * */
+	private void displayLocation() {
+
+		mLastLocation = LocationServices.FusedLocationApi
+				.getLastLocation(mGoogleApiClient);
+
+		if (mLastLocation != null) {
+			double latitude = mLastLocation.getLatitude();
+			double longitude = mLastLocation.getLongitude();
+			// locationMarker.setPosition(new LatLng(latitude,longitude));
+			/*
+			 * if (locationMarker != null) locationMarker.remove();
+			 * locationMarker = googleMap.addMarker(new MarkerOptions()
+			 * .position(new LatLng(latitude, longitude)));
+			 */
+		} else {
+
+		}
+
+	}
+
+	/**
+	 * Method to toggle periodic location updates
+	 * */
+	private void togglePeriodicLocationUpdates() {
+		if (!mRequestingLocationUpdates) {
+
+			mRequestingLocationUpdates = true;
+
+			// Starting the location updates
+			startLocationUpdates();
+			googleMap.setMyLocationEnabled(true);
+
+			// Log.d(TAG, "Periodic location updates started!");
+			System.out.println("Location updates started");
+
+		} else {
+
+			mRequestingLocationUpdates = false;
+
+			// Stopping the location updates
+			stopLocationUpdates();
+			googleMap.setMyLocationEnabled(true);
+
+			// Log.d(TAG, "Periodic location updates stopped!");
+			System.out.println("Location updates stopped");
+		}
+	}
+
+	/**
+	 * Creating google api client object
+	 * */
+	protected synchronized void buildGoogleApiClient() {
+		mGoogleApiClient = new GoogleApiClient.Builder(this)
+				.addConnectionCallbacks(this)
+				.addOnConnectionFailedListener(this)
+				.addApi(LocationServices.API).build();
+	}
+
+	/**
+	 * Creating location request object
+	 * */
+	protected void createLocationRequest() {
+		mLocationRequest = new LocationRequest();
+		mLocationRequest.setInterval(UPDATE_INTERVAL);
+		mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
+		mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+		mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
+	}
+
+	/**
+	 * Method to verify google play services on the device
+	 * */
+	private boolean checkPlayServices() {
+		int resultCode = GooglePlayServicesUtil
+				.isGooglePlayServicesAvailable(this);
+		if (resultCode != ConnectionResult.SUCCESS) {
+			if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+				GooglePlayServicesUtil.getErrorDialog(resultCode, this,
+						PLAY_SERVICES_RESOLUTION_REQUEST).show();
+			} else {
+				Toast.makeText(getApplicationContext(),
+						"This device is not supported.", Toast.LENGTH_LONG)
+						.show();
+				finish();
+			}
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Starting the location updates
+	 * */
+	protected void startLocationUpdates() {
+
+		LocationServices.FusedLocationApi.requestLocationUpdates(
+				mGoogleApiClient, mLocationRequest, this);
+
+	}
+
+	/**
+	 * Stopping location updates
+	 */
+	protected void stopLocationUpdates() {
+		LocationServices.FusedLocationApi.removeLocationUpdates(
+				mGoogleApiClient, this);
+	}
+
+	/**
+	 * Google api callback methods
+	 */
+	@Override
+	public void onConnectionFailed(ConnectionResult result) {
+		/*
+		 * Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = " +
+		 * result.getErrorCode());
+		 */
+		Toast.makeText(
+				getApplicationContext(),
+				"Connection failed: ConnectionResult.getErrorCode() = "
+						+ result.getErrorCode(), Toast.LENGTH_LONG).show();
+
+	}
+
+	@Override
+	public void onConnected(Bundle arg0) {
+
+		// Once connected with google api, get the location
+		displayLocation();
+
+		if (mRequestingLocationUpdates) {
+			startLocationUpdates();
+		}
+	}
+
+	@Override
+	public void onConnectionSuspended(int arg0) {
+		mGoogleApiClient.connect();
+	}
+
+	@Override
+	public void onLocationChanged(Location location) {
+		// Assign the new location
+		mLastLocation = location;
+
+		Toast.makeText(getApplicationContext(), "Location changed!",
+				Toast.LENGTH_SHORT).show();
+
+		// Displaying the new location on UI
+		displayLocation();
 	}
 
 }

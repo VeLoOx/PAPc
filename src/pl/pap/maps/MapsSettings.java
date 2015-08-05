@@ -26,7 +26,7 @@ public class MapsSettings extends FragmentActivity {
 		// googleMap.setMapType(GoogleMap.MAP_TYPE_NONE);
 
 		// Showing / hiding your current location
-		googleMap.setMyLocationEnabled(true);
+		googleMap.setMyLocationEnabled(false);
 
 		// Enable / Disable zooming controls
 		googleMap.getUiSettings().setZoomControlsEnabled(false);

@@ -28,19 +28,23 @@
     <string name="title">Title</string>
     <string name="snippet">Snippet</string>
     <string name="delete">Delete</string>
+  
     <!-- route info dialog -->
     <string name="routeinfo">Route Info</string>
     <string name="routename">Name</string>
     <string name="routecity">City</string>
     <string name="routedescription">Description</string>
+   
     <!-- home activity -->
     <string name="logout">Logout</string>
     <string name="planRoute">Plan route</string>
     <string name="startNewRoute">Start new route</string>
     <string name="chooseRoute">Choose route</string>
-    <!--  -->
+    <!-- Home menu -->
+    <string name="synchronize">Synchronize</string>
     
-    <string name="addMarker">Add marker</string>
+    <!-- Start New Route -->
+    <string name="addMarker">Mark position</string>
     <string name="showDescription">Show description</string>
     <string name="close">Close</string>
 
@@ -49,6 +53,7 @@
     <string name="save">Save</string>
     <string name="info">Info</string>
     <string name="edit">Edit</string>
+    <string name="showUserLocation">Show location</string>
     <!-- show criteria dialog -->
     <string name="criteriacity">City</string>
     <string name="criteriaauthor">Author</string>
@@ -57,5 +62,12 @@
     <string name="select">Select</string>
     <string name="cantbenull">Field can NOT be empty</string>
     <!--  -->
+    <string name="notConnected">You are not connected to the internet. Check connection status</string>
+    
+    <!-- TOAST when invoking REST -->
+    <string name="err404">Requested resource not found</string>
+    <string name="err500">Something went wrong at server end</string>
+    <string name="otherErr">Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]</string>
+    <string name="invalidJSON">Error Occurred [Server JSON response might be invalid]!</string>
 
 </resources>
