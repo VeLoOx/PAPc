@@ -3,12 +3,12 @@ package pl.pap.activites;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import pl.pap.activites.base.BaseActivity;
 import pl.pap.client.R;
 import pl.pap.dialogs.DescriptionDialog;
 import pl.pap.dialogs.MarkerDialog;
 import pl.pap.dialogs.RouteInfoDialog;
 import pl.pap.dialogs.SaveRouteDialog;
-import pl.pap.dialogs.RouteInfoDialog.RouteInfoDialogListener;
 import pl.pap.maps.MapsMethods;
 import pl.pap.maps.MapsSettings;
 import pl.pap.model.MarkerModel;
@@ -17,6 +17,15 @@ import pl.pap.utils.ConnectionGuardian;
 import pl.pap.utils.Consts;
 import pl.pap.utils.SharedPrefsUtils;
 import pl.pap.utils.Utility;
+import android.content.Intent;
+import android.location.Location;
+import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -28,11 +37,11 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -41,60 +50,47 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.app.ActionBarActivity;
-import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.location.Location;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
-
-public class StartNewRouteActivity extends FragmentActivity implements
+public class StartNewRouteActivity extends BaseActivity implements
 		OnMapLongClickListener, OnMapClickListener, OnMarkerDragListener,
 		OnMarkerClickListener, MarkerDialog.MarkerDialogListener,
 		RouteInfoDialog.RouteInfoDialogListener,
 		SaveRouteDialog.SaveRouteDialogListener, MapsMethods, Consts,
 		ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
 
-	//Maps
+	// Maps
 	private GoogleMap googleMap;
 	Marker currentMarker;
 	MapsSettings maps;
 	Route route;// = new Route();
-	//Dialogs
+	// Dialogs
 	DescriptionDialog dDialog = new DescriptionDialog();
 	MarkerDialog mDialog = new MarkerDialog(currentMarker);
 	SaveRouteDialog rDialog;
 	RouteInfoDialog iDialog;
-	//Utils
+	// Utils
 	JSONObject jsonMarker;
 	SharedPrefsUtils prefs;
 	ConnectionGuardian connGuard;
-	
+
 	boolean isAuthor = false;
 	boolean isEditable = false;
 	boolean toPersist = false;
 
 	// Location
-	private Location mLastLocation;
+	private Location lastLocation;
 
 	// Google client to interact with Google API
-	private GoogleApiClient mGoogleApiClient;
+	private GoogleApiClient googleApiClient;
 
 	// boolean flag to toggle periodic location updates
-	private boolean mRequestingLocationUpdates = false;
+	private boolean requestingLocationUpdates = false;
 
-	private LocationRequest mLocationRequest;
+	private LocationRequest locationRequest;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.start_new_route);
+		setContentView(R.layout.activity_start_new_route);
 		route = new Route();
 		// ===============MAPS
 		initializeMap();
@@ -117,14 +113,17 @@ public class StartNewRouteActivity extends FragmentActivity implements
 		// Connection
 		connGuard = new ConnectionGuardian(getApplicationContext());
 
+		setUpSlideMenu();
+
 	}
 
 	@Override
 	protected void onStart() {
 		super.onStart();
-		if (mGoogleApiClient != null) {
-			mGoogleApiClient.connect();
+		if (googleApiClient != null) {
+			googleApiClient.connect();
 		}
+		centerOnUser();
 	}
 
 	@Override
@@ -134,7 +133,7 @@ public class StartNewRouteActivity extends FragmentActivity implements
 		checkPlayServices();
 
 		// Resuming the periodic location updates
-		if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
+		if (googleApiClient.isConnected() && requestingLocationUpdates) {
 			startLocationUpdates();
 		}
 	}
@@ -142,8 +141,8 @@ public class StartNewRouteActivity extends FragmentActivity implements
 	@Override
 	protected void onStop() {
 		super.onStop();
-		if (mGoogleApiClient.isConnected()) {
-			mGoogleApiClient.disconnect();
+		if (googleApiClient.isConnected()) {
+			googleApiClient.disconnect();
 		}
 	}
 
@@ -171,34 +170,30 @@ public class StartNewRouteActivity extends FragmentActivity implements
 			return true;
 		}
 
-		String ktoryElement = "";
-
 		switch (item.getItemId()) {
 
 		case R.id.showRouteInfoItem:
-			ktoryElement = "Info";
-			showRouteInfo();
+
+			// showRouteInfo();
+			fillRouteInfo();
+			toPersist = false;
 			break;
 		case R.id.showRouteEditItem:
-			ktoryElement = "edit";
+
 			isEditable = true;
 			break;
 		case R.id.showRouteSaveItem:
-			ktoryElement = "save";
+
 			toPersist = true;
 			fillRouteInfo();
 			break;
-		case R.id.showRouteLocation:
-			ktoryElement = "location";
-			togglePeriodicLocationUpdates();
+		case R.id.action_showLocation:
 
+			// togglePeriodicLocationUpdates();
+			showUserLocation();
+			// centerOnUser();
 			break;
-		default:
-			ktoryElement = "none";
 		}
-
-		Toast.makeText(getApplicationContext(), "Element: " + ktoryElement,
-				Toast.LENGTH_LONG).show();
 
 		return super.onOptionsItemSelected(item);
 	}
@@ -211,16 +206,11 @@ public class StartNewRouteActivity extends FragmentActivity implements
 		// }
 		// if (isEditable) {
 		menu.findItem(R.id.showRouteSaveItem).setVisible(true);
+		menu.findItem(R.id.showRouteDeleteItem).setVisible(false);
 		// menu.findItem(R.id.showRouteEditItem).setEnabled(false);
 		// }
 		return super.onPrepareOptionsMenu(menu);
 
-	}
-
-	private void showRouteInfo() {
-		iDialog = new RouteInfoDialog(route);
-		FragmentManager fragMan = getSupportFragmentManager();
-		iDialog.show(fragMan, "routeInfoDialog");
 	}
 
 	private void fillRouteInfo() {
@@ -228,7 +218,6 @@ public class StartNewRouteActivity extends FragmentActivity implements
 		FragmentManager fragMan = getSupportFragmentManager();
 		rDialog.show(fragMan, "saveRouteDialog");
 	}
-
 
 	@Override
 	public boolean onMarkerClick(Marker mark) {
@@ -288,10 +277,10 @@ public class StartNewRouteActivity extends FragmentActivity implements
 			// check if map is created successfully or not
 			if (googleMap == null) {
 				Toast.makeText(getApplicationContext(),
-						"Sorry! unable to create maps", Toast.LENGTH_SHORT)
-						.show();
+						R.string.unnableToCreateMap, Toast.LENGTH_SHORT).show();
 			}
 		}
+		
 
 	}
 
@@ -322,10 +311,25 @@ public class StartNewRouteActivity extends FragmentActivity implements
 		route.addMarkerToMap(markModel.getMarkerId(), markModel);
 	}
 
+	private void centerOnUser() {
+		lastLocation = LocationServices.FusedLocationApi
+				.getLastLocation(googleApiClient);
+		System.out.println("Last location :" + lastLocation);
+		showUserLocation();
+		if (lastLocation != null) {
+			CameraPosition cameraPosition = new CameraPosition.Builder()
+					.target(new LatLng(lastLocation.getLatitude(), lastLocation
+							.getLongitude())).zoom(15).build();
+			googleMap.animateCamera(CameraUpdateFactory
+					.newCameraPosition(cameraPosition));
+		}
+
+	}
+
 	public void markPosition(View view) {
-		if (mLastLocation != null) {
-			double latitude = mLastLocation.getLatitude();
-			double longitude = mLastLocation.getLongitude();
+		if (lastLocation != null) {
+			double latitude = lastLocation.getLatitude();
+			double longitude = lastLocation.getLongitude();
 			// locationMarker.setPosition(new LatLng(latitude, longitude));
 
 			/*
@@ -341,8 +345,7 @@ public class StartNewRouteActivity extends FragmentActivity implements
 			mDialog.show(fragMan, "markerDialog");
 
 		} else {
-			Toast.makeText(getApplicationContext(),
-					"Location problem. Make sure GPS service is ON",
+			Toast.makeText(getApplicationContext(), R.string.checkGPS,
 					Toast.LENGTH_LONG).show();
 		}
 	}
@@ -368,11 +371,9 @@ public class StartNewRouteActivity extends FragmentActivity implements
 	}
 
 	private void saveRoute() {
-		if(!connGuard.isConnectedToInternet()){
-			Toast.makeText(
-					getApplicationContext(),
-					R.string.notConnected, Toast.LENGTH_LONG)
-					.show();
+		if (!connGuard.isConnectedToInternet()) {
+			Toast.makeText(getApplicationContext(), R.string.notConnected,
+					Toast.LENGTH_LONG).show();
 			return;
 		}
 		// Fill route object
@@ -427,14 +428,6 @@ public class StartNewRouteActivity extends FragmentActivity implements
 
 	}
 
-	public void navigateToHomeActivity() {
-		// prgDialog.dismiss();
-		Intent homeIntent = new Intent(getApplicationContext(),
-				HomeActivity.class);
-		homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(homeIntent);
-	}
-
 	private void restInvoke(RequestParams params) {
 		// Show Progress Dialog
 		// prgDialog.show();
@@ -455,11 +448,9 @@ public class StartNewRouteActivity extends FragmentActivity implements
 							// When the JSON response has status boolean value
 							// assigned with true
 							if (jO.getBoolean("status")) {
-								Toast.makeText(
-										getApplicationContext(),
-										"Route succesfully updated "
-												+ StatusCode, Toast.LENGTH_LONG)
-										.show();
+								Toast.makeText(getApplicationContext(),
+										jO.getString("data") + StatusCode,
+										Toast.LENGTH_LONG).show();
 								navigateToHomeActivity();
 							} else {
 								Toast.makeText(
@@ -469,10 +460,9 @@ public class StartNewRouteActivity extends FragmentActivity implements
 										.show();
 							}
 						} catch (JSONException e) {
-							Toast.makeText(
-									getApplicationContext(),
-									"Error Occured [Server's JSON response might be invalid]!",
-									Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(),
+									R.string.invalidJSON, Toast.LENGTH_LONG)
+									.show();
 							e.printStackTrace();
 
 						}
@@ -488,24 +478,31 @@ public class StartNewRouteActivity extends FragmentActivity implements
 						// When Http response code is '404'
 						if (statusCode == 404) {
 							Toast.makeText(getApplicationContext(),
-									"Requested resource not found",
-									Toast.LENGTH_LONG).show();
+									R.string.err404, Toast.LENGTH_LONG).show();
 						}
 						// When Http response code is '500'
 						else if (statusCode == 500) {
 							Toast.makeText(getApplicationContext(),
-									"Something went wrong at server end",
-									Toast.LENGTH_LONG).show();
+									R.string.err500, Toast.LENGTH_LONG).show();
 						}
 						// When Http response code other than 404, 500
 						else {
-							Toast.makeText(
-									getApplicationContext(),
-									"Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]",
-									Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(),
+									R.string.otherErr, Toast.LENGTH_LONG)
+									.show();
 						}
 					}
 				});
+	}
+
+	private void showUserLocation() {
+		System.out.println("Location enabled? "
+				+ googleMap.isMyLocationEnabled());
+		if (googleMap.isMyLocationEnabled()) {
+			googleMap.setMyLocationEnabled(false);
+			return;
+		}
+		googleMap.setMyLocationEnabled(true);
 	}
 
 	/**
@@ -513,12 +510,12 @@ public class StartNewRouteActivity extends FragmentActivity implements
 	 * */
 	private void displayLocation() {
 
-		mLastLocation = LocationServices.FusedLocationApi
-				.getLastLocation(mGoogleApiClient);
+		lastLocation = LocationServices.FusedLocationApi
+				.getLastLocation(googleApiClient);
 
-		if (mLastLocation != null) {
-			double latitude = mLastLocation.getLatitude();
-			double longitude = mLastLocation.getLongitude();
+		if (lastLocation != null) {
+			double latitude = lastLocation.getLatitude();
+			double longitude = lastLocation.getLongitude();
 			// locationMarker.setPosition(new LatLng(latitude,longitude));
 			/*
 			 * if (locationMarker != null) locationMarker.remove();
@@ -535,9 +532,9 @@ public class StartNewRouteActivity extends FragmentActivity implements
 	 * Method to toggle periodic location updates
 	 * */
 	private void togglePeriodicLocationUpdates() {
-		if (!mRequestingLocationUpdates) {
+		if (!requestingLocationUpdates) {
 
-			mRequestingLocationUpdates = true;
+			requestingLocationUpdates = true;
 
 			// Starting the location updates
 			startLocationUpdates();
@@ -548,7 +545,7 @@ public class StartNewRouteActivity extends FragmentActivity implements
 
 		} else {
 
-			mRequestingLocationUpdates = false;
+			requestingLocationUpdates = false;
 
 			// Stopping the location updates
 			stopLocationUpdates();
@@ -563,7 +560,7 @@ public class StartNewRouteActivity extends FragmentActivity implements
 	 * Creating google api client object
 	 * */
 	protected synchronized void buildGoogleApiClient() {
-		mGoogleApiClient = new GoogleApiClient.Builder(this)
+		googleApiClient = new GoogleApiClient.Builder(this)
 				.addConnectionCallbacks(this)
 				.addOnConnectionFailedListener(this)
 				.addApi(LocationServices.API).build();
@@ -573,11 +570,11 @@ public class StartNewRouteActivity extends FragmentActivity implements
 	 * Creating location request object
 	 * */
 	protected void createLocationRequest() {
-		mLocationRequest = new LocationRequest();
-		mLocationRequest.setInterval(UPDATE_INTERVAL);
-		mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
-		mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-		mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
+		locationRequest = new LocationRequest();
+		locationRequest.setInterval(UPDATE_INTERVAL);
+		locationRequest.setFastestInterval(FASTEST_INTERVAL);
+		locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+		locationRequest.setSmallestDisplacement(DISPLACEMENT);
 	}
 
 	/**
@@ -607,7 +604,7 @@ public class StartNewRouteActivity extends FragmentActivity implements
 	protected void startLocationUpdates() {
 
 		LocationServices.FusedLocationApi.requestLocationUpdates(
-				mGoogleApiClient, mLocationRequest, this);
+				googleApiClient, locationRequest, this);
 
 	}
 
@@ -616,7 +613,7 @@ public class StartNewRouteActivity extends FragmentActivity implements
 	 */
 	protected void stopLocationUpdates() {
 		LocationServices.FusedLocationApi.removeLocationUpdates(
-				mGoogleApiClient, this);
+				googleApiClient, this);
 	}
 
 	/**
@@ -641,20 +638,20 @@ public class StartNewRouteActivity extends FragmentActivity implements
 		// Once connected with google api, get the location
 		displayLocation();
 
-		if (mRequestingLocationUpdates) {
+		if (requestingLocationUpdates) {
 			startLocationUpdates();
 		}
 	}
 
 	@Override
 	public void onConnectionSuspended(int arg0) {
-		mGoogleApiClient.connect();
+		googleApiClient.connect();
 	}
 
 	@Override
 	public void onLocationChanged(Location location) {
 		// Assign the new location
-		mLastLocation = location;
+		lastLocation = location;
 
 		Toast.makeText(getApplicationContext(), "Location changed!",
 				Toast.LENGTH_SHORT).show();

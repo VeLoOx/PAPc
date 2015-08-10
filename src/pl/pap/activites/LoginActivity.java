@@ -38,7 +38,7 @@ public class LoginActivity extends Activity implements Consts {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.login);
+		setContentView(R.layout.activity_login);
 		//Shared prefs
 		prefs = new SharedPrefsUtils(this);
 		// Find Error Msg Text View control by ID

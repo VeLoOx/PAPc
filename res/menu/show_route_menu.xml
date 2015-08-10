@@ -4,11 +4,6 @@
     tools:context="pl.pap.client.ShowRouteActivity" >
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never"/>
-    <item
         android:id="@+id/showRouteInfoItem"
         android:orderInCategory="1"
         android:title="@string/info">
@@ -26,10 +21,15 @@
         android:visible="false">
     </item>
     <item
-        android:id="@+id/showRouteLocation"
+        android:id="@+id/showRouteDeleteItem"
         android:orderInCategory="4"
-        android:title="@string/showUserLocation"
+        android:title="@string/delete"
         android:visible="true">
     </item>
+   <item
+        android:id="@+id/action_showLocation"
+        android:icon="@drawable/ic_action_location_found"
+        android:showAsAction="ifRoom"
+        android:title="@string/abSearch"/>
 
 </menu>

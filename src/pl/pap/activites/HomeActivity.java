@@ -3,15 +3,13 @@ package pl.pap.activites;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import pl.pap.actionbar.adapter.SpinnerNavigationAdapter;
+import pl.pap.activites.base.BaseActivity;
 import pl.pap.client.R;
 import pl.pap.utils.ConnectionGuardian;
 import pl.pap.utils.Consts;
 import pl.pap.utils.OfflineModeManager;
 import pl.pap.utils.SharedPrefsUtils;
-import pl.pap.utils.Utility;
 import android.app.ActionBar;
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -29,8 +27,7 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
-public class HomeActivity extends Activity implements Consts,
-		ActionBar.OnNavigationListener {
+public class HomeActivity extends BaseActivity implements Consts {
 	TextView tvUserData;
 	TextView tvWelcomeBar;
 	ProgressDialog prgDialog;
@@ -42,9 +39,9 @@ public class HomeActivity extends Activity implements Consts,
 	// action bar
 	private ActionBar actionBar;
 
-	// adapter
-	private SpinnerNavigationAdapter adapter;
-
+	// Spinner adapter
+	// private SpinnerNavigationAdapter adapter;
+	// using to synchronize routes
 	private int actualRouteNumber = 0;
 
 	@Override
@@ -56,8 +53,8 @@ public class HomeActivity extends Activity implements Consts,
 		offManager = new OfflineModeManager(this);
 
 		// Displays Home Screen
-		setContentView(R.layout.home);
-		tvUserData = (TextView) findViewById(R.id.tvUserData);
+		setContentView(R.layout.activity_home);
+		// tvUserData = (TextView) findViewById(R.id.tvUserData);
 		tvWelcomeBar = (TextView) findViewById(R.id.tvWelcomeBar);
 		tvWelcomeBar.setText(tvWelcomeBar.getText() + " " + prefs.getLogin());
 
@@ -66,44 +63,13 @@ public class HomeActivity extends Activity implements Consts,
 		prgDialog.setMessage("Loading...");
 		prgDialog.setCancelable(false);
 
-		// action bar
-		actionBar = getActionBar();
+		// action bar actionBar = getActionBar();
 		// Hide the action bar title
-		actionBar.setDisplayShowTitleEnabled(false);
-		// Enabling Spinner dropdown navigation
-		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+		// actionBar.setDisplayShowTitleEnabled(false);
 
-		// title drop down adapter
-		adapter = new SpinnerNavigationAdapter(getApplicationContext());
+		// sets up slide menu
+		setUpSlideMenu();
 
-		// assigning the spinner navigation
-		actionBar.setListNavigationCallbacks(adapter, this);
-
-	}
-
-	@Override
-	public boolean onNavigationItemSelected(int itemPosition, long itemId) {
-
-		switch (itemPosition) {
-		case 0:
-			System.out.println("case 0");
-			break;
-		case 1:
-			System.out.println("case 1");
-			navigateToPlanRouteActivity();
-			break;
-		case 2:
-			System.out.println("case 2");
-			navigateToStartNewRouteActivity();
-			break;
-		case 3:
-			System.out.println("case 3");
-			navigateToChooseRouteActivity();
-		default:
-			break;
-
-		}
-		return false;
 	}
 
 	@Override
@@ -119,35 +85,28 @@ public class HomeActivity extends Activity implements Consts,
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
+		// toggle nav drawer on selecting action bar app icon/title
+
 		int id = item.getItemId();
 		if (id == R.id.action_settings) {
 			return true;
 		}
-		String ktoryElement = "";
 
 		switch (item.getItemId()) {
 
-		case R.id.item1:
-			ktoryElement = "Sync";
+		case R.id.action_synchronize:
+
 			synchronizeRoutes();
 			break;
 		case R.id.item2:
-			ktoryElement = "checkSync";
+
 			checkSync();
 			break;
 		default:
-			ktoryElement = "none";
 
 		}
 
-		Toast.makeText(getApplicationContext(), "Element: " + ktoryElement,
-				Toast.LENGTH_LONG).show();
-
 		return super.onOptionsItemSelected(item);
-	}
-
-	public void getUserData() {
-
 	}
 
 	public void logout(View view) {
@@ -158,55 +117,6 @@ public class HomeActivity extends Activity implements Consts,
 		editor.commit();
 		moveTaskToBack(true);
 		HomeActivity.this.finish();
-	}
-
-	public void navigateToPlanRouteActivity(View view) {
-		Intent planRouteIntent = new Intent(getApplicationContext(),
-				PlanRouteActivity.class);
-		planRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(planRouteIntent);
-	}
-
-	public void navigateToPlanRouteActivity() {
-		Intent planRouteIntent = new Intent(getApplicationContext(),
-				PlanRouteActivity.class);
-		planRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(planRouteIntent);
-	}
-
-	public void navigateToStartNewRouteActivity(View view) {
-		Intent startRouteIntent = new Intent(getApplicationContext(),
-				StartNewRouteActivity.class);
-		startRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(startRouteIntent);
-	}
-
-	public void navigateToStartNewRouteActivity() {
-		Intent startRouteIntent = new Intent(getApplicationContext(),
-				StartNewRouteActivity.class);
-		startRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(startRouteIntent);
-	}
-
-	public void navigateToShowRouteActivity(View view) {
-		Intent showRouteIntent = new Intent(getApplicationContext(),
-				ShowRouteActivity.class);
-		showRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(showRouteIntent);
-	}
-
-	public void navigateToChooseRouteActivity(View view) {
-		Intent chooseRouteIntent = new Intent(getApplicationContext(),
-				ChooseRouteActivity.class);
-		chooseRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(chooseRouteIntent);
-	}
-
-	public void navigateToChooseRouteActivity() {
-		Intent chooseRouteIntent = new Intent(getApplicationContext(),
-				ChooseRouteActivity.class);
-		chooseRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(chooseRouteIntent);
 	}
 
 	public void exit(View view) {
@@ -243,8 +153,12 @@ public class HomeActivity extends Activity implements Consts,
 				i++;
 
 			}
-		} else
+		} else {
+			// Toast.makeText(this, R.string.nothingToSycnh,
+			// Toast.LENGTH_LONG).show();
 			System.out.println("Either not connected or nothin to persist");
+		}
+
 	}
 
 	private void checkSync() {
@@ -256,6 +170,8 @@ public class HomeActivity extends Activity implements Consts,
 			i++;
 
 		}
+		
+		if(prefs.getRoute(i) == "") System.out.println("Nothing to persist");
 	}
 
 	private void persistRoute(String route) {

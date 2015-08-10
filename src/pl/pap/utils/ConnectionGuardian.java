@@ -1,8 +1,10 @@
 package pl.pap.utils;
 
+import pl.pap.client.R;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.widget.Toast;
 
 public class ConnectionGuardian {
 
@@ -24,7 +26,9 @@ public class ConnectionGuardian {
 					}
 
 		}
+		Toast.makeText(context, R.string.notConnected, Toast.LENGTH_LONG).show();
 		return false;
+		
 	}
 
 }

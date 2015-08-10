@@ -9,12 +9,11 @@ import com.google.android.gms.maps.model.LatLng;
 
 public class MapsSettings extends FragmentActivity {
 
-	
 	// Google Map
 	public GoogleMap googleMap;
-	
+
 	public MapsSettings(GoogleMap googleMap) {
-		this.googleMap=googleMap;
+		this.googleMap = googleMap;
 	}
 
 	public GoogleMap setUpMap() {
@@ -46,12 +45,12 @@ public class MapsSettings extends FragmentActivity {
 		double latitude = 51.22515235950864;
 		double longitude = 20.85676409304142;
 
-		CameraPosition cameraPosition = new CameraPosition.Builder()
+		/*CameraPosition cameraPosition = new CameraPosition.Builder()
 				.target(new LatLng(latitude, longitude)).zoom(15).build();
 
 		googleMap.animateCamera(CameraUpdateFactory
-				.newCameraPosition(cameraPosition));
+				.newCameraPosition(cameraPosition));*/
 		return googleMap;
-		
+
 	}
 }

@@ -3,6 +3,7 @@ package pl.pap.activites;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import pl.pap.activites.base.BaseActivity;
 import pl.pap.client.R;
 import pl.pap.dialogs.DescriptionDialog;
 import pl.pap.dialogs.MarkerDialog;
@@ -16,6 +17,8 @@ import pl.pap.utils.ConnectionGuardian;
 import pl.pap.utils.Consts;
 import pl.pap.utils.SharedPrefsUtils;
 import pl.pap.utils.Utility;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
@@ -35,12 +38,14 @@ import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListe
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -48,7 +53,7 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
-public class ShowRouteActivity extends FragmentActivity implements
+public class ShowRouteActivity extends BaseActivity implements
 		OnMapLongClickListener, OnMapClickListener, OnMarkerDragListener,
 		OnMarkerClickListener, MarkerDialog.MarkerDialogListener,
 		SaveRouteDialog.SaveRouteDialogListener,
@@ -90,7 +95,7 @@ public class ShowRouteActivity extends FragmentActivity implements
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.show_route);
+		setContentView(R.layout.activity_show_route);
 		// ===============MAPS
 		initializeMap();
 		// Set up map methods
@@ -102,6 +107,7 @@ public class ShowRouteActivity extends FragmentActivity implements
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {
 			String value = extras.getString("routeId");
+			System.out.println("Route extraction: id " + value);
 			requestRoute(value);
 		}
 		// ===============Location
@@ -113,6 +119,8 @@ public class ShowRouteActivity extends FragmentActivity implements
 
 			createLocationRequest();
 		}
+
+		setUpSlideMenu();
 
 	}
 
@@ -168,35 +176,36 @@ public class ShowRouteActivity extends FragmentActivity implements
 			return true;
 		}
 
-		String ktoryElement = "";
-
 		switch (item.getItemId()) {
 
 		case R.id.showRouteInfoItem:
-			ktoryElement = "Info";
+
 			showRouteInfo();
 			break;
 		case R.id.showRouteEditItem:
-			ktoryElement = "edit";
+
 			isEditable = true;
 			// setUpListeners();
 			break;
 		case R.id.showRouteSaveItem:
-			ktoryElement = "save";
+
 			toPersist = true;
 			fillRouteInfo();
 			break;
-		case R.id.showRouteLocation:
-			ktoryElement = "location";
-			togglePeriodicLocationUpdates();
+		case R.id.showRouteDeleteItem:
+
+			deciedeToDelete();
+			// removeRoute();
+			break;
+		case R.id.action_showLocation:
+
+			// togglePeriodicLocationUpdates();
+			showUserLocation();
 
 			break;
 		default:
-			ktoryElement = "none";
-		}
 
-		Toast.makeText(getApplicationContext(), "Element: " + ktoryElement,
-				Toast.LENGTH_LONG).show();
+		}
 
 		return super.onOptionsItemSelected(item);
 	}
@@ -213,15 +222,6 @@ public class ShowRouteActivity extends FragmentActivity implements
 		}
 		return super.onPrepareOptionsMenu(menu);
 
-	}
-
-	private void requestRoute(String routeId) {
-		RequestParams params = new RequestParams();
-		params.put("login", prefs.getLogin());
-		params.put("sessionId", prefs.getSessionID());
-		params.put("autor", prefs.getLogin());
-		params.put("id", routeId);
-		restInvokeRequest(params);
 	}
 
 	private void fillMap() {
@@ -245,6 +245,29 @@ public class ShowRouteActivity extends FragmentActivity implements
 		rDialog = new SaveRouteDialog(route);
 		FragmentManager fragMan = getSupportFragmentManager();
 		rDialog.show(fragMan, "saveRouteDialog");
+	}
+
+	private void centerOnRoute() {
+		double lat = 0.0;
+		double lng = 0.0;
+		int size = 0;
+
+		if (route != null) {
+			size = route.getMarkerMap().size();
+			for (MarkerModel value : route.getMarkerMap().values()) {
+				lat += value.getLat();
+				lng += value.getLng();
+			}
+		}
+		if (size > 0) {
+			lat = lat / route.getMarkerMap().size();
+			lng = lng / route.getMarkerMap().size();
+			CameraPosition cameraPosition = new CameraPosition.Builder()
+					.target(new LatLng(lat, lng)).zoom(15).build();
+			googleMap.animateCamera(CameraUpdateFactory
+					.newCameraPosition(cameraPosition));
+		}
+
 	}
 
 	@Override
@@ -357,6 +380,15 @@ public class ShowRouteActivity extends FragmentActivity implements
 
 	}
 
+	private void requestRoute(String routeId) {
+		RequestParams params = new RequestParams();
+		params.put("login", prefs.getLogin());
+		params.put("sessionId", prefs.getSessionID());
+		params.put("autor", prefs.getLogin());
+		params.put("id", routeId);
+		restInvokeRequest(params);
+	}
+
 	private void updateRoute() {
 		// Fill route object
 		route.setAuthor(prefs.getLogin());
@@ -367,6 +399,57 @@ public class ShowRouteActivity extends FragmentActivity implements
 		// params.put("route", convertToJson());
 		params.put("route", Utility.convertToJson(route));
 		restInvoke(params);
+	}
+
+	private void deciedeToDelete() {
+
+		AlertDialog.Builder alertDialog = new AlertDialog.Builder(
+				ShowRouteActivity.this);
+
+		// Setting Dialog Title
+		alertDialog.setTitle(R.string.wantDeleteTitle);
+
+		// Setting Dialog Message
+		alertDialog.setMessage(R.string.wantDeleteDesc);
+
+		// Setting Icon to Dialog
+		// alertDialog.setIcon(R.drawable.delete);
+
+		// Setting Positive "Yes" Button
+		alertDialog.setPositiveButton(R.string.yes,
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+
+						removeRoute();
+						Toast.makeText(getApplicationContext(),
+								"You clicked on YES", Toast.LENGTH_SHORT)
+								.show();
+					}
+				});
+
+		// Setting Negative "NO" Button
+		alertDialog.setNegativeButton(R.string.no,
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+
+						Toast.makeText(getApplicationContext(),
+								"You clicked on NO", Toast.LENGTH_SHORT).show();
+						dialog.cancel();
+					}
+				});
+
+		// Showing Alert Message
+		alertDialog.show();
+	}
+
+	private void removeRoute() {
+		// Instantiate Http Request Param Object
+		RequestParams params = new RequestParams();
+		params.put("login", prefs.getLogin());
+		params.put("sessionId", prefs.getSessionID());
+		params.put("id", route.getId().toString());
+		System.out.println("removeRoute delete: id " + route.getId());
+		restInvokeDelete(params);
 	}
 
 	@Override
@@ -410,14 +493,6 @@ public class ShowRouteActivity extends FragmentActivity implements
 
 	}
 
-	public void navigateToHomeActivity() {
-		// prgDialog.dismiss();
-		Intent homeIntent = new Intent(getApplicationContext(),
-				HomeActivity.class);
-		homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(homeIntent);
-	}
-
 	private void restInvoke(RequestParams params) {
 		// Show Progress Dialog
 		// prgDialog.show();
@@ -438,11 +513,9 @@ public class ShowRouteActivity extends FragmentActivity implements
 							// When the JSON response has status boolean value
 							// assigned with true
 							if (jO.getBoolean("status")) {
-								Toast.makeText(
-										getApplicationContext(),
-										"Route succesfully updated "
-												+ StatusCode, Toast.LENGTH_LONG)
-										.show();
+								Toast.makeText(getApplicationContext(),
+										jO.getString("data") + StatusCode,
+										Toast.LENGTH_LONG).show();
 							} else {
 								Toast.makeText(
 										getApplicationContext(),
@@ -451,10 +524,9 @@ public class ShowRouteActivity extends FragmentActivity implements
 										.show();
 							}
 						} catch (JSONException e) {
-							Toast.makeText(
-									getApplicationContext(),
-									"Error Occured [Server's JSON response might be invalid]!",
-									Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(),
+									R.string.invalidJSON, Toast.LENGTH_LONG)
+									.show();
 							e.printStackTrace();
 
 						}
@@ -470,21 +542,18 @@ public class ShowRouteActivity extends FragmentActivity implements
 						// When Http response code is '404'
 						if (statusCode == 404) {
 							Toast.makeText(getApplicationContext(),
-									"Requested resource not found",
-									Toast.LENGTH_LONG).show();
+									R.string.err404, Toast.LENGTH_LONG).show();
 						}
 						// When Http response code is '500'
 						else if (statusCode == 500) {
 							Toast.makeText(getApplicationContext(),
-									"Something went wrong at server end",
-									Toast.LENGTH_LONG).show();
+									R.string.err500, Toast.LENGTH_LONG).show();
 						}
 						// When Http response code other than 404, 500
 						else {
-							Toast.makeText(
-									getApplicationContext(),
-									"Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]",
-									Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(),
+									R.string.otherErr, Toast.LENGTH_LONG)
+									.show();
 						}
 					}
 				});
@@ -512,16 +581,16 @@ public class ShowRouteActivity extends FragmentActivity implements
 								if (route.getAuthor().equals(prefs.getLogin())) {
 									isAuthor = true;
 								}
+								centerOnRoute();
 							} else {
 								Toast.makeText(getApplicationContext(),
 										jO.getString("errorMessage"),
 										Toast.LENGTH_LONG).show();
 							}
 						} catch (JSONException e) {
-							Toast.makeText(
-									getApplicationContext(),
-									"Error Occured [Server's JSON response might be invalid]!",
-									Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(),
+									R.string.invalidJSON, Toast.LENGTH_LONG)
+									.show();
 							e.printStackTrace();
 						}
 					}
@@ -536,24 +605,92 @@ public class ShowRouteActivity extends FragmentActivity implements
 						// When Http response code is '404'
 						if (statusCode == 404) {
 							Toast.makeText(getApplicationContext(),
-									"Requested resource not found",
-									Toast.LENGTH_LONG).show();
+									R.string.err404, Toast.LENGTH_LONG).show();
 						}
 						// When Http response code is '500'
 						else if (statusCode == 500) {
 							Toast.makeText(getApplicationContext(),
-									"Something went wrong at server end",
-									Toast.LENGTH_LONG).show();
+									R.string.err500, Toast.LENGTH_LONG).show();
 						}
 						// When Http response code other than 404, 500
 						else {
-							Toast.makeText(
-									getApplicationContext(),
-									"Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]",
-									Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(),
+									R.string.otherErr, Toast.LENGTH_LONG)
+									.show();
 						}
 					}
 				});
+	}
+
+	private void restInvokeDelete(RequestParams params) {
+		// Show Progress Dialog
+		// prgDialog.show();
+		// Make RESTful webservice call using AsyncHttpClient object
+		System.out.println("PlanRouteActivity: Inside restInvokeDelete");
+		System.out.println("Delete params: " + params);
+		AsyncHttpClient client = new AsyncHttpClient();
+		client.delete(getApplicationContext(), domainAdress + DELETE_ROUTE,
+				null, params, new AsyncHttpResponseHandler() {
+					// When the response returned by REST has Http response code
+					// '200'
+					@Override
+					public void onSuccess(int StatusCode, String answer) {
+						try {
+							JSONObject jO = new JSONObject(answer);
+							if (jO.getBoolean("status")) {
+								Toast.makeText(getApplicationContext(),
+										jO.getString("data"), Toast.LENGTH_LONG)
+										.show();
+								navigateToHomeActivity();
+
+							} else {
+								Toast.makeText(getApplicationContext(),
+										jO.getString("errorMessage"),
+										Toast.LENGTH_LONG).show();
+							}
+						} catch (JSONException e) {
+							Toast.makeText(getApplicationContext(),
+									R.string.invalidJSON, Toast.LENGTH_LONG)
+									.show();
+							e.printStackTrace();
+						}
+					}
+
+					// When the response returned by REST has Http response code
+					// other than '200'
+					@Override
+					public void onFailure(int statusCode, Throwable error,
+							String content) {
+						// Hide Progress Dialog
+						// prgDialog.hide();
+						// When Http response code is '404'
+						if (statusCode == 404) {
+							Toast.makeText(getApplicationContext(),
+									R.string.err404, Toast.LENGTH_LONG).show();
+						}
+						// When Http response code is '500'
+						else if (statusCode == 500) {
+							Toast.makeText(getApplicationContext(),
+									R.string.err500, Toast.LENGTH_LONG).show();
+						}
+						// When Http response code other than 404, 500
+						else {
+							Toast.makeText(getApplicationContext(),
+									R.string.otherErr, Toast.LENGTH_LONG)
+									.show();
+						}
+					}
+				});
+	}
+
+	private void showUserLocation() {
+		System.out.println("Location enabled? "
+				+ googleMap.isMyLocationEnabled());
+		if (googleMap.isMyLocationEnabled()) {
+			googleMap.setMyLocationEnabled(false);
+			return;
+		}
+		googleMap.setMyLocationEnabled(true);
 	}
 
 	/**

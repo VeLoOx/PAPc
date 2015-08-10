@@ -12,11 +12,13 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
+import pl.pap.activites.base.BaseActivity;
 import pl.pap.client.R;
 import pl.pap.dialogs.CriteriaDialog;
 import pl.pap.model.MarkerModel;
 import pl.pap.model.Route;
 import pl.pap.routeslist.adapter.RouteListAdapter;
+import pl.pap.utils.ConnectionGuardian;
 import pl.pap.utils.Consts;
 import pl.pap.utils.SharedPrefsUtils;
 import pl.pap.utils.Utility;
@@ -35,9 +37,10 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RadioButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
-public class ChooseRouteActivity extends FragmentActivity implements Consts,
+public class ChooseRouteActivity extends BaseActivity implements Consts,
 		CriteriaDialog.CriteriaDialogListener {
 
 	private ListView listView;
@@ -45,31 +48,41 @@ public class ChooseRouteActivity extends FragmentActivity implements Consts,
 	Route route;
 	List<Route> routesList;
 	List<Route> appliedCriteriaList;
-	SharedPrefsUtils prefs;
-	Button btnSearch;
+	
 	CriteriaDialog cDialog;
-
+	
+	ConnectionGuardian connGuard;
+	SharedPrefsUtils prefs;
+	
+	//
+	TextView tvConn;
+	ListView lvRouteList;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.choose_route);
+		setContentView(R.layout.activity_choose_route);
 		//
 		prefs = new SharedPrefsUtils(this);
+		connGuard= new ConnectionGuardian(this);
+		//
 		requestRoutesList();
 		//
-		btnSearch = (Button) this.findViewById(R.id.btnSearch);
-		btnSearch.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				showCriteriaDialog();
-
-			}
-		});
+		setUpSlideMenu();
+		
 		//
+		tvConn=(TextView) findViewById(R.id.tvConnection);
+		lvRouteList=(ListView) findViewById(R.id.lV1);
+		
+		//checkConnectionAndDealWithList();
 
 	}
 
+	@Override
+	protected void onStart() {
+		super.onStart();
+		checkConnectionAndDealWithList();
+	}
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
@@ -82,9 +95,13 @@ public class ChooseRouteActivity extends FragmentActivity implements Consts,
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
+		switch (item.getItemId()) {
+
+		case R.id.action_search:
+			showCriteriaDialog();
+			break;
+		default:
+
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -237,6 +254,18 @@ public class ChooseRouteActivity extends FragmentActivity implements Consts,
 
 		});
 	}
+	
+	private void checkConnectionAndDealWithList(){
+		if(!connGuard.isConnectedToInternet()){
+			lvRouteList.setVisibility(View.GONE);
+			tvConn.setVisibility(View.VISIBLE);
+			return;
+		}
+		lvRouteList.setVisibility(View.VISIBLE);
+		tvConn.setVisibility(View.GONE);
+		requestRoutesList();
+		
+	}
 
 	private void restInvokeRequest(RequestParams params) {
 		// Show Progress Dialog
@@ -272,7 +301,7 @@ public class ChooseRouteActivity extends FragmentActivity implements Consts,
 						} catch (JSONException e) {
 							Toast.makeText(
 									getApplicationContext(),
-									"Error Occured [Server's JSON response might be invalid]!",
+									R.string.invalidJSON,
 									Toast.LENGTH_LONG).show();
 							e.printStackTrace();
 						}
@@ -288,25 +317,24 @@ public class ChooseRouteActivity extends FragmentActivity implements Consts,
 						// When Http response code is '404'
 						if (statusCode == 404) {
 							Toast.makeText(getApplicationContext(),
-									"Requested resource not found",
-									Toast.LENGTH_LONG).show();
+									R.string.err404, Toast.LENGTH_LONG).show();
 						}
 						// When Http response code is '500'
 						else if (statusCode == 500) {
 							Toast.makeText(getApplicationContext(),
-									"Something went wrong at server end",
-									Toast.LENGTH_LONG).show();
+									R.string.err500, Toast.LENGTH_LONG).show();
 						}
 						// When Http response code other than 404, 500
 						else {
-							Toast.makeText(
-									getApplicationContext(),
-									"Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]",
-									Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(),
+									R.string.otherErr, Toast.LENGTH_LONG)
+									.show();
 						}
 					}
 				});
 	}
+	
+	
 
 	public void navigateToShowRouteActivity(String routeId) {
 		Intent showRouteIntent = new Intent(getApplicationContext(),

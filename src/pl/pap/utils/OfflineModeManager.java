@@ -1,8 +1,10 @@
 package pl.pap.utils;
 
+import pl.pap.client.R;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.widget.Toast;
 
 public class OfflineModeManager implements Consts {
 	Context context;
@@ -52,6 +54,7 @@ public class OfflineModeManager implements Consts {
 		}
 		System.out
 				.println("OfflineMode: nothin to PERSIST");
+		Toast.makeText(context, R.string.nothingToPersist, Toast.LENGTH_LONG).show();
 		return false;
 
 	}

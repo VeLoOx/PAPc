@@ -3,6 +3,7 @@ package pl.pap.activites;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import pl.pap.activites.base.BaseActivity;
 import pl.pap.client.R;
 import pl.pap.dialogs.MarkerDialog;
 import pl.pap.dialogs.SaveRouteDialog;
@@ -17,6 +18,8 @@ import pl.pap.utils.SharedPrefsUtils;
 import pl.pap.utils.Utility;
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -41,11 +44,10 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
-public class PlanRouteActivity extends FragmentActivity implements
+public class PlanRouteActivity extends BaseActivity implements
 		OnMapLongClickListener, OnMapClickListener, OnMarkerDragListener,
 		OnMarkerClickListener, MarkerDialog.MarkerDialogListener,
-		SaveRouteDialog.SaveRouteDialogListener, MapsMethods, Consts,
-		ActionBar.OnNavigationListener {
+		SaveRouteDialog.SaveRouteDialogListener, MapsMethods, Consts {
 
 	// Google Map
 	private GoogleMap googleMap;
@@ -68,7 +70,8 @@ public class PlanRouteActivity extends FragmentActivity implements
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.plan_route);
+		setContentView(R.layout.activity_plan_route);
+		// super.onCreateDrawer(savedInstanceState);
 		// System.out.println("PlanRouteActivity on create");
 		try {
 			route = new Route();
@@ -80,17 +83,18 @@ public class PlanRouteActivity extends FragmentActivity implements
 			setUpListeners();
 			prefs = new SharedPrefsUtils(this);
 			connGuard = new ConnectionGuardian(this);
-			offManager= new OfflineModeManager(this);
+			offManager = new OfflineModeManager(this);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		setUpSlideMenu();
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.map_menu, menu);
+		getMenuInflater().inflate(R.menu.plan_route_menu, menu);
 		return true;
 	}
 
@@ -100,45 +104,36 @@ public class PlanRouteActivity extends FragmentActivity implements
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
+
 		if (id == R.id.action_settings) {
 			return true;
 		}
-		String ktoryElement = "";
 
 		switch (item.getItemId()) {
 
 		case R.id.item1:
-			ktoryElement = "New";
-			cleanMap();
+
+			// cleanMap();
+			deciedeToSave();
 			break;
 		case R.id.item2:
-			ktoryElement = "Save";
+
 			toPersist = true;
 			fillRouteInfo();
 			// saveRoute();
 			// fillMap();
 			break;
 		case R.id.item3:
-			ktoryElement = "info";
+
 			toPersist = false;
 			fillRouteInfo();
 			// requestRoute();
 			break;
 		default:
-			ktoryElement = "none";
 
 		}
 
-		Toast.makeText(getApplicationContext(), "Element: " + ktoryElement,
-				Toast.LENGTH_LONG).show();
-
 		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
-	public boolean onNavigationItemSelected(int itemPosition, long itemId) {
-
-		return false;
 	}
 
 	/**
@@ -229,20 +224,6 @@ public class PlanRouteActivity extends FragmentActivity implements
 
 	}
 
-	private void convertFromJson(String json) {
-		Gson gson = new Gson();
-		Route routeModel = gson.fromJson(json, Route.class);
-		System.out.println("GSON: String: " + route);
-		System.out.println(routeModel);
-		System.out.println(routeModel.getAuthor());
-		System.out.println("rozmiar mapy markerow "
-				+ routeModel.getMarkerMap().size());
-		for (MarkerModel value : routeModel.getMarkerMap().values()) {
-			// System.out.println("ID "+(MarkerModel)value.toString());
-			System.out.println(value.getTitle());
-		}
-	}
-
 	private void saveRoute() {
 		route.setAuthor(prefs.getLogin());
 		if (connGuard.isConnectedToInternet()) {
@@ -251,20 +232,54 @@ public class PlanRouteActivity extends FragmentActivity implements
 			params.put("sessionId", prefs.getSessionID());
 			params.put("route", Utility.convertToJson(route));
 			restInvoke(params);
-		}
-		else {
-		Toast.makeText(getApplicationContext(), R.string.notConnected, Toast.LENGTH_LONG).show();
-		offManager.saveRoute(Utility.convertToJson(route));
+		} else {
+			/*Toast.makeText(getApplicationContext(), R.string.notConnected,
+					Toast.LENGTH_LONG).show();*/
+			offManager.saveRoute(Utility.convertToJson(route));
 		}
 	}
 
-	private void requestRoute() {
-		RequestParams params = new RequestParams();
-		params.put("login", prefs.getLogin());
-		params.put("sessionId", prefs.getSessionID());
-		params.put("autor", prefs.getLogin());
-		params.put("id", "71");
-		restInvokeRequest(params);
+	private void deciedeToSave() {
+
+		AlertDialog.Builder alertDialog = new AlertDialog.Builder(
+				PlanRouteActivity.this);
+
+		// Setting Dialog Title
+		alertDialog.setTitle(R.string.wantSaveTitle);
+
+		// Setting Dialog Message
+		alertDialog.setMessage(R.string.wantSaveTitle);
+
+		// Setting Icon to Dialog
+		// alertDialog.setIcon(R.drawable.delete);
+
+		// Setting Positive "Yes" Button
+		alertDialog.setPositiveButton(R.string.yes,
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+
+						// saveRoute();
+						cleanMap();
+
+						Toast.makeText(getApplicationContext(),
+								"You clicked on YES", Toast.LENGTH_SHORT)
+								.show();
+					}
+				});
+
+		// Setting Negative "NO" Button
+		alertDialog.setNegativeButton(R.string.no,
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+
+						Toast.makeText(getApplicationContext(),
+								"You clicked on NO", Toast.LENGTH_SHORT).show();
+						dialog.cancel();
+					}
+				});
+
+		// Showing Alert Message
+		alertDialog.show();
 	}
 
 	// LISTENERS
@@ -346,14 +361,6 @@ public class PlanRouteActivity extends FragmentActivity implements
 
 	}
 
-	public void navigateToHomeActivity() {
-		// prgDialog.dismiss();
-		Intent homeIntent = new Intent(getApplicationContext(),
-				HomeActivity.class);
-		homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(homeIntent);
-	}
-
 	private void restInvoke(RequestParams params) {
 		// Show Progress Dialog
 		// prgDialog.show();
@@ -374,9 +381,8 @@ public class PlanRouteActivity extends FragmentActivity implements
 							// When the JSON response has status boolean value
 							// assigned with true
 							if (jO.getBoolean("status")) {
-								Toast.makeText(
-										getApplicationContext(),
-										"Route succesfully saved " + StatusCode,
+								Toast.makeText(getApplicationContext(),
+										jO.getString("data") + StatusCode,
 										Toast.LENGTH_LONG).show();
 							} else {
 								Toast.makeText(
@@ -386,78 +392,11 @@ public class PlanRouteActivity extends FragmentActivity implements
 										.show();
 							}
 						} catch (JSONException e) {
-							Toast.makeText(
-									getApplicationContext(),
-									"Error Occured [Server's JSON response might be invalid]!",
-									Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(),
+									R.string.invalidJSON, Toast.LENGTH_LONG)
+									.show();
 							e.printStackTrace();
 
-						}
-					}
-
-					// When the response returned by REST has Http response code
-					// other than '200'
-					@Override
-					public void onFailure(int statusCode, Throwable error,
-							String content) {
-						// Hide Progress Dialog
-						// prgDialog.hide();
-						// When Http response code is '404'
-						if (statusCode == 404) {
-							Toast.makeText(getApplicationContext(),
-									"Requested resource not found",
-									Toast.LENGTH_LONG).show();
-						}
-						// When Http response code is '500'
-						else if (statusCode == 500) {
-							Toast.makeText(getApplicationContext(),
-									"Something went wrong at server end",
-									Toast.LENGTH_LONG).show();
-						}
-						// When Http response code other than 404, 500
-						else {
-							Toast.makeText(
-									getApplicationContext(),
-									"Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]",
-									Toast.LENGTH_LONG).show();
-						}
-					}
-				});
-	}
-
-	private void restInvokeRequest(RequestParams params) {
-		// Show Progress Dialog
-		// prgDialog.show();
-		// Make RESTful webservice call using AsyncHttpClient object
-		System.out.println("PlanRouteActivity: Inside restInvokeRequest");
-		AsyncHttpClient client = new AsyncHttpClient();
-		System.out.println(domainAdress + REQUEST_ROUTE);
-		client.get(domainAdress + REQUEST_ROUTE, params,
-				new AsyncHttpResponseHandler() {
-					// When the response returned by REST has Http response code
-					// '200'
-					@Override
-					public void onSuccess(int StatusCode, String answer) {
-						try {
-							JSONObject jO = new JSONObject(answer);
-							if (jO.getBoolean("status")) {
-								System.out
-										.println("Recived string from server: "
-												+ answer);
-								System.out.println("Data from serwer: "
-										+ jO.getString("data"));
-								convertFromJson(jO.getString("data"));
-							} else {
-								Toast.makeText(getApplicationContext(),
-										jO.getString("errorMessage"),
-										Toast.LENGTH_LONG).show();
-							}
-						} catch (JSONException e) {
-							Toast.makeText(
-									getApplicationContext(),
-									"Error Occured [Server's JSON response might be invalid]!",
-									Toast.LENGTH_LONG).show();
-							e.printStackTrace();
 						}
 					}
 

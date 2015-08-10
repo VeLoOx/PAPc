@@ -34,7 +34,7 @@ public class RegisterActivity extends Activity implements Consts {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.register);
+		setContentView(R.layout.activity_register);
 		// Find Error Msg Text View control by ID
 		tvErrorMsg = (TextView) findViewById(R.id.register_error);
 		// Find Name Edit View control by ID

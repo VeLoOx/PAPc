@@ -13,6 +13,7 @@ public interface Consts {
 	public String REQUEST_ROUTE="/requestRoute/requestRoute";
 	public String REQUEST_ROUTES_LIST="/requestRoute/requestRoutesList";
 	public String UPDATE_ROUTE="/persistRoute/updateRoute";
+	public String DELETE_ROUTE="/deleteRoute/deleteRoute";
 	
 	//Sharedpreferences
 	public String PREFS="clientPrefs";
