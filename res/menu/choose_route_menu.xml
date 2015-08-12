@@ -8,5 +8,14 @@
         android:icon="@drawable/ic_action_search"
         android:showAsAction="ifRoom"
         android:title="@string/abSearch"/>
+    <item
+        android:id="@+id/action_refresh"
+        android:icon="@drawable/ic_action_refresh"
+        android:showAsAction="ifRoom"
+        android:title="@string/abRefresh"/>
+    <item
+        android:id="@+id/showStoredList"
+        android:orderInCategory="0"
+        android:title="@string/offlineList"/>
 
 </menu>

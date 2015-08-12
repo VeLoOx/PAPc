@@ -2,13 +2,13 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
- 
+
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="10dip" >
- 
+
         <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -16,27 +16,33 @@
             android:text="@string/login_title"
             android:textSize="25sp"
             android:textStyle="bold" />
- 
-        <EditText
-            android:id="@+id/loginEmail"
+
+        <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter your Email ID"
+            android:layout_marginTop="15dip"
+            android:text="@string/uname" />
+
+        <EditText
+            android:id="@+id/loginUsername"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/userName"
             android:inputType="textEmailAddress" />
- 
+
         <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="15dip"
             android:text="@string/pwd" />
- 
+
         <EditText
             android:id="@+id/loginPassword"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter Password"
+            android:hint="@string/userPassword"
             android:inputType="textPassword" />
- 
+
         <TextView
             android:id="@+id/login_error"
             android:layout_width="fill_parent"
@@ -44,7 +50,7 @@
             android:padding="10dip"
             android:textColor="#e30000"
             android:textStyle="bold" />
- 
+
         <Button
             android:id="@+id/btnLogin"
             android:layout_width="fill_parent"
@@ -52,9 +58,9 @@
             android:layout_marginTop="20dip"
             android:background="#060"
             android:onClick="loginUser"
-            android:text="Login"
+            android:text="@string/btnLogin"
             android:textColor="#fff" />
- 
+
         <Button
             android:id="@+id/btnLinkToRegisterScreen"
             android:layout_width="fill_parent"
@@ -62,9 +68,9 @@
             android:layout_marginTop="40dip"
             android:background="@null"
             android:onClick="navigateToRegisterActivity"
-            android:text="Signup"
+            android:text="@string/btnSignup"
             android:textColor="#228b22"
             android:textStyle="bold" />
     </LinearLayout>
- 
+
 </ScrollView>

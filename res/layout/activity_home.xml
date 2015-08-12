@@ -7,7 +7,8 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="10dip" >
+        android:padding="10dip"
+        android:background="@drawable/bg_512" >
 
         <TextView
             android:id="@+id/tvWelcomeBar"
@@ -16,41 +17,7 @@
             android:text="@string/tvWelcomeBar"
             android:textSize="30sp" />
 
-        <Button
-            android:id="@+id/button1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dip"
-            android:background="#AE9B08"
-            android:onClick="navigateToPlanRouteActivity"
-            android:text="@string/planRoute" />
-
-        <Button
-            android:id="@+id/button2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dip"
-            android:background="#B86209"
-            android:onClick="navigateToStartNewRouteActivity"
-            android:text="@string/startNewRoute" />
-
-        <Button
-            android:id="@+id/button3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dip"
-            android:background="#7009B8"
-            android:onClick="navigateToShowRouteActivity"
-            android:text="@string/chooseRoute" />
-
-        <Button
-            android:id="@+id/btnLogout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dip"
-            android:background="#A10000"
-            android:onClick="logout"
-            android:text="@string/logout" />
+       
     </LinearLayout>
 
     <!-- Listview to display slider menu -->

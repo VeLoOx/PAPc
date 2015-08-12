@@ -7,11 +7,22 @@
     <string name="title_activity_login">Login</string>
     <string name="title_activity_home">Home</string>
     <string name="title_activity_show_route">Show Route</string>
-    <string name="title_activity_start_new_route">Start New Route</string>
+    <string name="title_activity_start_new_route">New Route</string>
     <string name="title_activity_choose_route">Choose Route</string>
     <string name="title_activity_register">Register</string>
     <string name="title_activity_plan_route">Plan Route</string>
-   
+    <string name="title_activity_about">About</string>
+
+    <!-- login activity -->
+    <string name="uname">Username</string>
+    <string name="userName">Enter username</string>
+    <string name="userPassword">Enter password</string>
+    <string name="btnLogin">Login</string>
+    <string name="btnSignup">Singup</string>
+    <string name="tooShort"></string>
+    <string name="loginSucces">"You are successfully logged in!</string>
+    <string name="emptyField">"Don't leave any field empty"</string>
+    
     <!-- register activity -->
     <string name="name">Name</string>
     <string name="email">Email</string>
@@ -19,6 +30,7 @@
     <string name="btnRegister">Register</string>
     <string name="tvWelcomeBar">Welcome</string>
     <string name="password">Password</string>
+    <string name="registerSucces">You are successfully registered!</string>
 
     <!-- marker dialog -->
     <string name="markerinfo">Marker info</string>
@@ -39,10 +51,11 @@
     <string name="planRoute">Plan route</string>
     <string name="startNewRoute">Start new route</string>
     <string name="chooseRoute">Choose route</string>
-    
+
     <!-- Home menu -->
     <string name="synchronize">Synchronize</string>
     <string name="nothingToSycnh">"Either not connected to internet or nothing to persist"</string>
+    <string name="about">About</string>
 
     <!-- Start New Route -->
     <string name="addMarker">Mark position</string>
@@ -50,13 +63,21 @@
     <string name="close">Close</string>
     <string name="checkGPS">"Location problem. Make sure GPS service is ON"</string>
 
-    <!-- map menu -->
+    <!-- Choose Route -->
+    <string name="noConnection">You are not connected to the internet</string>
+    <string name="notConnected">\tYou are not connected to the internet. \n\t Check connection status.	\n\tShow last obtained list?</string>
+	<string name="offlineList">Offline List</string>
+	<string name="show">Show</string>
+	<string name="noOfflineRoutesList">No predownloaded routes list to show</string>
+  
+	<!-- map menu -->
     <string name="neww">New</string>
     <string name="save">Save</string>
     <string name="info">Info</string>
     <string name="edit">Edit</string>
     <string name="showUserLocation">Show location</string>
-   
+    <string name="searchHint">Search...</string>
+
     <!-- show criteria dialog -->
     <string name="criteriacity">City</string>
     <string name="criteriaauthor">Author</string>
@@ -65,11 +86,10 @@
     <string name="select">Select</string>
     <string name="cantbenull">Field can NOT be empty</string>
     <!--  -->
-    <string name="notConnected">You are not connected to the internet. \n Check connection status</string>
-	<string name="nothingToPersist">Nothing to persist</string>
+
+    <string name="nothingToPersist">Nothing to persist</string>
     <string name="unnableToCreateMap">Sorry! Unable to create map</string>
-    
-    
+
     <!-- ARE YOU SURE Dialog -->
     <string name="yes">Yes</string>
     <string name="no">No</string>
@@ -77,20 +97,20 @@
     <string name="wantSaveDesc">Are you sure you want to clean the map? All data will be lost.</string>
     <string name="wantDeleteTitle">Delete Route?</string>
     <string name="wantDeleteDesc">Are you sure you want to delete this route?</string>
-    
-    
-    
+    <string name="wantLogoutTitle">Logout?</string>
+    <string name="wantLogoutDesc">Are you sure you want to logout?</string>
+
     <!-- TOAST when invoking REST -->
     <string name="err404">Requested resource not found</string>
     <string name="err500">Something went wrong at server end</string>
     <string name="otherErr">Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]</string>
     <string name="invalidJSON">Error Occurred [Server JSON response might be invalid]!</string>
-    
-    
+
     <!-- ActionBar -->
     <string name="abSearch">Search</string>
     <string name="abShowLocation">Show location</string>
-    
+    <string name="abRefresh">Refresh</string>
+
     <!-- slide menu BEGIN -->
     <string name="drawer_open">Slider Menu Opened</string>
     <string name="drawer_close">Slider Menu Closed</string>
@@ -107,15 +127,25 @@
     <!-- Keep them in order as the titles are in -->
     <array name="slider_menu_icons">
         <item>@drawable/ic_home</item>
-        <item>@drawable/ic_people</item>
-        <item>@drawable/ic_photos</item>
-        <item>@drawable/ic_communities</item>
-        <item>@drawable/ic_pages</item>
-        <item>@drawable/ic_whats_hot</item>
+        <item>@drawable/ic_planr</item>
+        <item>@drawable/ic_chooser</item>
+        <item>@drawable/ic_startr</item>
     </array>
 
     <!-- Content Description -->
     <string name="desc_list_item_icon">Item Icon</string>
     <!-- slide menu END -->
 
+
+	<string name="aboutText">Personal Travel Assistant will help you in your travels.\n 
+	    Features: \n 
+	    -Planning route for future use. \n
+	    -Creating route during your travel. \n
+	    -Using routes created by other users.\n
+	    -Also gives possibility to work without connection to the internet\n
+	    \n
+	    \n
+	    Icons used in the application comes from: \n
+	    icons8.com
+	    </string>
 </resources>

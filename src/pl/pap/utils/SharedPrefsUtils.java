@@ -55,9 +55,9 @@ public class SharedPrefsUtils implements Consts {
 		editor.putString(USER_SESSINID, sessionID);
 		editor.commit();
 	}
-	
-	public boolean checkRoute(int i){
-		return prefs.contains(ROUTE_KEY+i);
+
+	public boolean checkRoute(int i) {
+		return prefs.contains(ROUTE_KEY + i);
 	}
 
 	public String getRoute(int i) {
@@ -69,13 +69,37 @@ public class SharedPrefsUtils implements Consts {
 
 	public void setRoute(int i, String route) {
 		editor = prefs.edit();
-		editor.putString(ROUTE_KEY+i, route);
+		editor.putString(ROUTE_KEY + i, route);
 		editor.commit();
 	}
-	
-	public void removeRoute(int i){
+
+	public void removeRoute(int i) {
 		editor = prefs.edit();
-		editor.remove(ROUTE_KEY+i);
+		editor.remove(ROUTE_KEY + i);
+		editor.commit();
+	}
+
+	public boolean checkRoutesList(){
+		return prefs.contains(ROUTES_LIST);
+	}
+	
+	public String getRoutesList() {
+		if (prefs.contains(ROUTES_LIST)) {
+			return prefs.getString(ROUTES_LIST, "");
+		}
+		return "";
+	}
+
+	public void setRoutesList(String routesList) {
+		editor = prefs.edit();
+		editor.putString(ROUTES_LIST, routesList);
+		editor.commit();
+
+	}
+
+	public void removeRoutesList() {
+		editor = prefs.edit();
+		editor.remove(ROUTES_LIST);
 		editor.commit();
 	}
 

@@ -23,6 +23,7 @@ public interface Consts {
 	//Offline Mode
 	public String ROUTE_KEY="route";
 	public int ROUTE_MEMORY_SPACE = 10;
+	public String ROUTES_LIST="routesList";
 	
 	//Location
 	public static int UPDATE_INTERVAL = 10000; // 10 sec

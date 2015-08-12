@@ -26,7 +26,7 @@ public class ConnectionGuardian {
 					}
 
 		}
-		Toast.makeText(context, R.string.notConnected, Toast.LENGTH_LONG).show();
+		Toast.makeText(context, R.string.noConnection, Toast.LENGTH_LONG).show();
 		return false;
 		
 	}

@@ -42,6 +42,10 @@ public class Utility {
         return txt!=null && txt.trim().length()>0 ? true: false;
     }
     
+    public static boolean isNotTooShort(String txt){
+    	return txt.trim().length()>3;
+    }
+    
     /**
      * Get process name by its PID
      * @param context

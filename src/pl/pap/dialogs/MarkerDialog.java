@@ -2,7 +2,7 @@ package pl.pap.dialogs;
 
 import com.google.android.gms.maps.model.Marker;
 
-import pl.pap.activites.PlanRouteActivity;
+import pl.pap.activities.PlanRouteActivity;
 import pl.pap.client.R;
 import pl.pap.client.R.id;
 import pl.pap.client.R.layout;

@@ -4,6 +4,12 @@
     tools:context="pl.pap.client.MapActivity" >
 
     <item
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_action_search"
+        android:showAsAction="ifRoom"
+        android:title="@string/abSearch"
+        android:actionViewClass="android.widget.SearchView"/>
+    <item
         android:id="@+id/item1"
         android:orderInCategory="1"
         android:title="@string/neww">
@@ -13,7 +19,7 @@
         android:orderInCategory="2"
         android:title="@string/save">
     </item>
-     <item
+    <item
         android:id="@+id/item3"
         android:orderInCategory="3"
         android:title="@string/info">

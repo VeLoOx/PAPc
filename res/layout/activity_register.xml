@@ -29,22 +29,10 @@
         <EditText
             android:id="@+id/registerName"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" android:hint="Enter your Name"/>
+            android:layout_height="wrap_content" 
+            android:hint="@string/userName"/>
  
-        <!-- Email Label -->
- 
-        <TextView
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/email" />
-        <!-- Email TextField -->
- 
-        <EditText
-            android:id="@+id/registerEmail"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:hint="Enter your Email ID"
-            android:inputType="textEmailAddress" />
+      
  
         <!-- Password Label -->
  
@@ -59,7 +47,7 @@
             android:id="@+id/registerPassword"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter Password"
+            android:hint="@string/userPassword"
             android:inputType="textPassword" />
  
         <!-- Error message -->
@@ -92,7 +80,7 @@
             android:layout_marginTop="20dip"
             android:background="@null"
             android:onClick="navigateToLoginActivity"
-            android:text="Login"
+            android:text="@string/btnLogin"
             android:textColor="#228b22"
             android:textStyle="bold" />
     </LinearLayout>
