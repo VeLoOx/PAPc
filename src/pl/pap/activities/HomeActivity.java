@@ -1,5 +1,8 @@
 package pl.pap.activities;
 
+import java.io.UnsupportedEncodingException;
+
+import org.apache.http.entity.StringEntity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -9,6 +12,7 @@ import pl.pap.utils.ConnectionGuardian;
 import pl.pap.utils.Consts;
 import pl.pap.utils.OfflineModeManager;
 import pl.pap.utils.SharedPrefsUtils;
+import pl.pap.utils.Utility;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -33,16 +37,12 @@ public class HomeActivity extends BaseActivity implements Consts {
 	TextView tvUserData;
 	TextView tvWelcomeBar;
 	ProgressDialog prgDialog;
-	// Utils
-	// SharedPreferences sp;
+
 	ConnectionGuardian connGuard;
 	SharedPrefsUtils prefs;
 	OfflineModeManager offManager;
 	// action bar
 	private ActionBar actionBar;
-
-	// Spinner adapter
-	// private SpinnerNavigationAdapter adapter;
 	// using to synchronize routes
 	private int actualRouteNumber = 0;
 
@@ -56,7 +56,6 @@ public class HomeActivity extends BaseActivity implements Consts {
 
 		// Displays Home Screen
 		setContentView(R.layout.activity_home);
-		// tvUserData = (TextView) findViewById(R.id.tvUserData);
 		tvWelcomeBar = (TextView) findViewById(R.id.tvWelcomeBar);
 		tvWelcomeBar.setText(tvWelcomeBar.getText() + " " + prefs.getLogin());
 
@@ -64,10 +63,6 @@ public class HomeActivity extends BaseActivity implements Consts {
 		prgDialog = new ProgressDialog(this);
 		prgDialog.setMessage("Loading...");
 		prgDialog.setCancelable(false);
-
-		// action bar actionBar = getActionBar();
-		// Hide the action bar title
-		// actionBar.setDisplayShowTitleEnabled(false);
 
 		// sets up slide menu
 		setUpSlideMenu();
@@ -79,12 +74,10 @@ public class HomeActivity extends BaseActivity implements Consts {
 	@Override
 	protected void onStop() {
 		super.onStop();
-		// System.out.println("Home onStop");
 		if (prgDialog != null) {
 			prgDialog.dismiss();
 			prgDialog = null;
 		}
-		// exit();
 	}
 
 	@Override
@@ -215,16 +208,11 @@ public class HomeActivity extends BaseActivity implements Consts {
 			int i = 1;
 			while (prefs.getRoute(i) != "") {
 				actualRouteNumber = i;
-				System.out.println(ROUTE_KEY + i);
-				System.out.println(prefs.getRoute(i));
-				persistRoute(prefs.getRoute(i));
+				restInvoke(prefs.getRoute(i));
 				i++;
 
 			}
 		} else {
-			// Toast.makeText(this, R.string.nothingToSycnh,
-			// Toast.LENGTH_LONG).show();
-			System.out.println("Either not connected or nothin to persist");
 		}
 
 	}
@@ -233,38 +221,29 @@ public class HomeActivity extends BaseActivity implements Consts {
 		int i = 1;
 		while (prefs.getRoute(i) != "") {
 			actualRouteNumber = i;
-			System.out.println(ROUTE_KEY + i);
-			System.out.println(prefs.getRoute(i));
 			i++;
 
 		}
 
-		if (prefs.getRoute(i) == "")
-			System.out.println("Nothing to persist");
-
-		System.out.println("Route list: " + prefs.getRoutesList());
 	}
 
-	private void persistRoute(String route) {
-		if (connGuard.isConnectedToInternet()) {
-			RequestParams params = new RequestParams();
-			params.put("login", prefs.getLogin());
-			params.put("sessionId", prefs.getSessionID());
-			params.put("route", route);
-			restInvoke(params);
-		} else {
-			Toast.makeText(getApplicationContext(), R.string.notConnected,
-					Toast.LENGTH_LONG).show();
-		}
-	}
-
-	public void restInvoke(RequestParams params) {
-		// Show Progress Dialog
-		// prgDialog.show();
+	public void restInvoke(String route) {
 		// Make RESTful webservice call using AsyncHttpClient object
 		AsyncHttpClient client = new AsyncHttpClient();
-		client.get(domainAdress + PERSIST_ROUTE, params,
-				new AsyncHttpResponseHandler() {
+		
+		StringEntity entity = null;
+		try {
+			entity = new StringEntity(route, "UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		client.addHeader(Consts.PARAM_LOGIN, prefs.getLogin());
+		client.addHeader(Consts.PARAM_SESSIONID, prefs.getSessionID());
+		
+		client.post(getApplicationContext(), domainAdress + PERSIST_ROUTE,
+				null, entity, Consts.JSON, new AsyncHttpResponseHandler() {
 					// When the response returned by REST has Http response code
 					// '200'
 					@Override
@@ -277,16 +256,16 @@ public class HomeActivity extends BaseActivity implements Consts {
 							JSONObject jO = new JSONObject(answer);
 							// When the JSON response has status boolean value
 							// assigned with true
-							if (jO.getBoolean("status")) {
+							if (jO.getBoolean(Consts.MSG_STATUS)) {
 								Toast.makeText(
 										getApplicationContext(),
-										"Route succesfully saved " + StatusCode,
+										jO.getString(Consts.MSG_INFO) + StatusCode,
 										Toast.LENGTH_LONG).show();
 								prefs.removeRoute(actualRouteNumber);
 							} else {
 								Toast.makeText(
 										getApplicationContext(),
-										jO.getString("errorMessage")
+										jO.getString(Consts.MSG_INFO)
 												+ StatusCode, Toast.LENGTH_LONG)
 										.show();
 							}
@@ -304,8 +283,6 @@ public class HomeActivity extends BaseActivity implements Consts {
 					@Override
 					public void onFailure(int statusCode, Throwable error,
 							String content) {
-						// Hide Progress Dialog
-						// prgDialog.hide();
 						// When Http response code is '404'
 						if (statusCode == 404) {
 							Toast.makeText(getApplicationContext(),

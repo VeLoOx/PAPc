@@ -1,14 +1,17 @@
 package pl.pap.activities;
 
+import java.io.UnsupportedEncodingException;
+
+import org.apache.http.entity.StringEntity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import pl.pap.activities.map.MapActivity;
 import pl.pap.client.R;
 import pl.pap.dialogs.RouteInfoDialog;
-import pl.pap.maps.MapsSettings;
 import pl.pap.model.MarkerModel;
 import pl.pap.utils.ConnectionGuardian;
+import pl.pap.utils.Consts;
 import pl.pap.utils.SharedPrefsUtils;
 import pl.pap.utils.Utility;
 import android.app.AlertDialog;
@@ -36,8 +39,6 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
-import static java.lang.Math.*;
-
 public class ShowRouteActivity extends MapActivity implements
 		RouteInfoDialog.RouteInfoDialogListener, ConnectionCallbacks,
 		OnConnectionFailedListener, LocationListener {
@@ -62,76 +63,22 @@ public class ShowRouteActivity extends MapActivity implements
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		System.out.println("ShowRoute on create");
 		setContentView(R.layout.activity_show_route);
 		// ===============MAPS
 		initializeMap();
 		// Set up map methods
-		maps = new MapsSettings(googleMap);
-		googleMap = maps.setUpMap();
+		setUpMap();
 		setUpListeners();
 		// ===================
 		prefs = new SharedPrefsUtils(this);
 		// Connection
 		connGuard = new ConnectionGuardian(getApplicationContext());
-		// ===============Location
-		// First we need to check availability of play services
-		if (checkPlayServices()) {
-
-			// Building the GoogleApi client
-			buildGoogleApiClient();
-			createLocationRequest();
-		}
 		setUpSlideMenu();
-
 		Bundle extras = getIntent().getExtras();
-
-		// if (extras != null) {
-		// String value = extras.getString("routeId");
-		// System.out.println("Route extraction: id " + value);
-		// requestRoute(value);
-		// }
-
 		if (extras != null) {
 			String value = extras.getString("route");
-			System.out.println("Route extraction: " + value);
 			showRoute(value);
 		}
-
-	}
-
-	@Override
-	protected void onStart() {
-		super.onStart();
-		if (googleApiClient != null) {
-			googleApiClient.connect();
-		}
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-
-		checkPlayServices();
-
-		// Resuming the periodic location updates
-		if (googleApiClient.isConnected() && requestingLocationUpdates) {
-			startLocationUpdates();
-		}
-	}
-
-	@Override
-	protected void onStop() {
-		super.onStop();
-		if (googleApiClient.isConnected()) {
-			googleApiClient.disconnect();
-		}
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		stopLocationUpdates();
 	}
 
 	@Override
@@ -174,8 +121,6 @@ public class ShowRouteActivity extends MapActivity implements
 			// removeRoute();
 			break;
 		case R.id.action_showLocation:
-
-			// togglePeriodicLocationUpdates();
 			showUserLocation();
 
 			break;
@@ -189,12 +134,13 @@ public class ShowRouteActivity extends MapActivity implements
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		if (isAuthor) {
-			// menu.clear();
 			menu.findItem(R.id.showRouteEditItem).setEnabled(true);
+
 		}
 		if (isEditable) {
 			menu.findItem(R.id.showRouteSaveItem).setVisible(true);
 			menu.findItem(R.id.showRouteEditItem).setEnabled(false);
+			menu.findItem(R.id.showRouteDeleteItem).setVisible(true);
 		}
 		return super.onPrepareOptionsMenu(menu);
 
@@ -238,38 +184,7 @@ public class ShowRouteActivity extends MapActivity implements
 
 			lat = lat / route.getMarkerMap().size();
 			lng = lng / route.getMarkerMap().size();
-			System.out.println("middle point " + lat + " " + lng);
-			System.out.println("Max Min Values" + (maxLat - lat) + " "
-					+ (maxLng - lng));
-
-			if (Math.abs((maxLat - lat)) <= 0.002
-					|| Math.abs((maxLng - lng)) <= 0.002) {
-				fZoom = 15;
-			}
-
-			if (Math.abs((maxLat - lat)) > 0.01
-					|| Math.abs((maxLng - lng)) > 0.01) {
-				fZoom = 12;
-			}
-
-			if (Math.abs((maxLat - lat)) > 0.5
-					|| Math.abs((maxLng - lng)) > 0.5) {
-				fZoom = 7;
-			}
-
-			if (Math.abs((maxLat - lat)) > 1 || Math.abs((maxLng - lng)) > 1) {
-				fZoom = 5;
-			}
-
-			if (Math.abs((maxLat - lat)) > 10 || Math.abs((maxLng - lng)) > 10) {
-				fZoom = 3;
-			}
-
-			if (Math.abs((maxLat - lat)) > 20 || Math.abs((maxLng - lng)) > 20) {
-				fZoom = 1;
-			}
-
-			System.out.println("Setting map zoom to: " + fZoom);
+			fZoom = calculateZoom((maxLat - lat), (maxLng - lng));
 			CameraPosition cameraPosition = new CameraPosition.Builder()
 					.target(new LatLng(lat, lng)).zoom(fZoom).build();
 			googleMap.animateCamera(CameraUpdateFactory
@@ -278,14 +193,31 @@ public class ShowRouteActivity extends MapActivity implements
 
 	}
 
-	private void requestRoute(String routeId) {
-		System.out.println("Requet route");
-		RequestParams params = new RequestParams();
-		params.put("login", prefs.getLogin());
-		params.put("sessionId", prefs.getSessionID());
-		params.put("autor", prefs.getLogin());
-		params.put("id", routeId);
-		restInvokeRequest(params);
+	private float calculateZoom(double lat, double lng) {
+		if (Math.abs(lat) <= 0.002 || Math.abs((lng)) <= 0.002) {
+			return 15;
+		}
+
+		if (Math.abs(lat) > 0.01 || Math.abs(lng) > 0.01) {
+			return 12;
+		}
+
+		if (Math.abs(lat) > 0.5 || Math.abs(lng) > 0.5) {
+			return 7;
+		}
+
+		if (Math.abs(lat) > 1 || Math.abs(lng) > 1) {
+			return 5;
+		}
+
+		if (Math.abs(lat) > 10 || Math.abs(lng) > 10) {
+			return 3;
+		}
+
+		if (Math.abs(lat) > 20 || Math.abs(-lng) > 20) {
+			return 1;
+		}
+		return 0;
 	}
 
 	private void showRoute(String json) {
@@ -299,28 +231,13 @@ public class ShowRouteActivity extends MapActivity implements
 	}
 
 	private void fillMap() {
-		System.out.println("Fill map");
 		if (route != null) {
-			System.out.println("Marker map size " + route.getMarkerMap());
 			for (Object value : route.getMarkerMap().values()) {
 				googleMap.addMarker(route
 						.convertToMarkerOptions((MarkerModel) value));
 			}
-			// centerOnRoute();
-		} else
-			System.out.println("Route empty");
-	}
+		} 
 
-	private void updateRoute() {
-		// Fill route object
-		route.setAuthor(prefs.getLogin());
-		// Instantiate Http Request Param Object
-		RequestParams params = new RequestParams();
-		params.put("login", prefs.getLogin());
-		params.put("sessionId", prefs.getSessionID());
-		// params.put("route", convertToJson());
-		params.put("route", Utility.convertToJson(route));
-		restInvokeUpdate(params);
 	}
 
 	private void showRouteInfo() {
@@ -375,7 +292,6 @@ public class ShowRouteActivity extends MapActivity implements
 		params.put("login", prefs.getLogin());
 		params.put("sessionId", prefs.getSessionID());
 		params.put("id", route.getId().toString());
-		System.out.println("removeRoute delete: id " + route.getId());
 		restInvokeDelete(params);
 	}
 
@@ -385,12 +301,8 @@ public class ShowRouteActivity extends MapActivity implements
 		route.setCity(rDialog.routeCity);
 		route.setDescription(rDialog.routeDescription);
 		if (toPersist) {
-			// saveRoute();
-			// navigateToHomeActivity();
-			System.out.println("Route is about to be updated");
 			if (connGuard.isConnectedToInternet())
 				updateRoute();
-			// navigateToHomeActivity();
 		}
 
 	}
@@ -407,12 +319,27 @@ public class ShowRouteActivity extends MapActivity implements
 
 	}
 
-	private void restInvokeUpdate(RequestParams params) {
-		// Show Progress Dialog
-		// prgDialog.show();
+	private void updateRoute() {
+		// Fill route object
+		route.setAuthor(prefs.getLogin());
+		restInvokeUpdate();
+	}
+
+	private void restInvokeUpdate() {
 		// Make RESTful webservice call using AsyncHttpClient object
 		AsyncHttpClient client = new AsyncHttpClient();
-		client.get(domainAdress + UPDATE_ROUTE, params,
+		
+		StringEntity entity = null;
+		try {
+			entity = new StringEntity(Utility.convertToJson(route), "UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		client.addHeader(Consts.PARAM_LOGIN, prefs.getLogin());
+		client.addHeader(Consts.PARAM_SESSIONID, prefs.getSessionID());
+		
+		client.put(getApplicationContext(),domainAdress + UPDATE_ROUTE, null, entity, Consts.JSON,
 				new AsyncHttpResponseHandler() {
 					// When the response returned by REST has Http response code
 					// '200'
@@ -426,14 +353,14 @@ public class ShowRouteActivity extends MapActivity implements
 							JSONObject jO = new JSONObject(answer);
 							// When the JSON response has status boolean value
 							// assigned with true
-							if (jO.getBoolean("status")) {
+							if (jO.getBoolean(Consts.MSG_STATUS)) {
 								Toast.makeText(getApplicationContext(),
-										jO.getString("data") + StatusCode,
+										jO.getString(Consts.MSG_INFO) + StatusCode,
 										Toast.LENGTH_LONG).show();
 							} else {
 								Toast.makeText(
 										getApplicationContext(),
-										jO.getString("errorMessage")
+										jO.getString(Consts.MSG_INFO)
 												+ StatusCode, Toast.LENGTH_LONG)
 										.show();
 							}
@@ -470,79 +397,13 @@ public class ShowRouteActivity extends MapActivity implements
 									R.string.otherErr, Toast.LENGTH_LONG)
 									.show();
 						}
+
 					}
+
 				});
+
 	}
-
-	private void restInvokeRequest(RequestParams params) {
-		// Show Progress Dialog
-		// prgDialog.show();
-		// Make RESTful webservice call using AsyncHttpClient object
-		System.out.println("RestInvokeRequest");
-		AsyncHttpClient client = new AsyncHttpClient();
-		client.get(domainAdress + REQUEST_ROUTE, params,
-				new AsyncHttpResponseHandler() {
-					// When the response returned by REST has Http response code
-					// '200'
-					@Override
-					public void onSuccess(int StatusCode, String answer) {
-						System.out.println("Request succes");
-						try {
-							JSONObject jO = new JSONObject(answer);
-							if (jO.getBoolean("status")) {
-								// convertFromJson(jO.getString("data"));
-								route = Utility.convertRouteFromJson(jO
-										.getString("data"));
-
-								if (route.getAuthor().equals(prefs.getLogin())) {
-									isAuthor = true;
-								}
-								fillMap();
-								centerOnRoute();
-							} else {
-								Toast.makeText(getApplicationContext(),
-										jO.getString("errorMessage"),
-										Toast.LENGTH_LONG).show();
-							}
-						} catch (JSONException e) {
-							Toast.makeText(getApplicationContext(),
-									R.string.invalidJSON, Toast.LENGTH_LONG)
-									.show();
-							e.printStackTrace();
-						}
-					}
-
-					// When the response returned by REST has Http response code
-					// other than '200'
-					@Override
-					public void onFailure(int statusCode, Throwable error,
-							String content) {
-						System.out.println("Request failure");
-						// Hide Progress Dialog
-						// prgDialog.hide();
-						// When Http response code is '404'
-						if (statusCode == 404) {
-							Toast.makeText(getApplicationContext(),
-									R.string.err404, Toast.LENGTH_LONG).show();
-						}
-						// When Http response code is '500'
-						else if (statusCode == 500) {
-							Toast.makeText(getApplicationContext(),
-									R.string.err500, Toast.LENGTH_LONG).show();
-						}
-						// When Http response code other than 404, 500
-						else {
-							Toast.makeText(getApplicationContext(),
-									R.string.otherErr, Toast.LENGTH_LONG)
-									.show();
-						}
-					}
-				});
-	}
-
 	private void restInvokeDelete(RequestParams params) {
-		// Show Progress Dialog
-		// prgDialog.show();
 		// Make RESTful webservice call using AsyncHttpClient object
 		AsyncHttpClient client = new AsyncHttpClient();
 		client.delete(getApplicationContext(), domainAdress + DELETE_ROUTE,
@@ -555,13 +416,13 @@ public class ShowRouteActivity extends MapActivity implements
 							JSONObject jO = new JSONObject(answer);
 							if (jO.getBoolean("status")) {
 								Toast.makeText(getApplicationContext(),
-										jO.getString("data"), Toast.LENGTH_LONG)
+										jO.getString(Consts.MSG_INFO), Toast.LENGTH_LONG)
 										.show();
 								navigateToHomeActivity();
 
 							} else {
 								Toast.makeText(getApplicationContext(),
-										jO.getString("errorMessage"),
+										jO.getString(Consts.MSG_INFO),
 										Toast.LENGTH_LONG).show();
 							}
 						} catch (JSONException e) {
@@ -577,8 +438,7 @@ public class ShowRouteActivity extends MapActivity implements
 					@Override
 					public void onFailure(int statusCode, Throwable error,
 							String content) {
-						// Hide Progress Dialog
-						// prgDialog.hide();
+
 						// When Http response code is '404'
 						if (statusCode == 404) {
 							Toast.makeText(getApplicationContext(),
@@ -600,8 +460,6 @@ public class ShowRouteActivity extends MapActivity implements
 	}
 
 	private void showUserLocation() {
-		System.out.println("Location enabled? "
-				+ googleMap.isMyLocationEnabled());
 		if (googleMap.isMyLocationEnabled()) {
 			googleMap.setMyLocationEnabled(false);
 			return;
@@ -612,53 +470,12 @@ public class ShowRouteActivity extends MapActivity implements
 	/**
 	 * Method to display the location on UI
 	 * */
-	private void displayLocation() {
+	private void getLocation() {
 
 		lastLocation = LocationServices.FusedLocationApi
 				.getLastLocation(googleApiClient);
-
-		if (lastLocation != null) {
-			double latitude = lastLocation.getLatitude();
-			double longitude = lastLocation.getLongitude();
-			// locationMarker.setPosition(new LatLng(latitude,longitude));
-			/*
-			 * if (locationMarker != null) locationMarker.remove();
-			 * locationMarker = googleMap.addMarker(new MarkerOptions()
-			 * .position(new LatLng(latitude, longitude)));
-			 */
-		} else {
-
-		}
-
 	}
 
-	/**
-	 * Method to toggle periodic location updates
-	 * */
-	private void togglePeriodicLocationUpdates() {
-		if (!requestingLocationUpdates) {
-
-			requestingLocationUpdates = true;
-
-			// Starting the location updates
-			startLocationUpdates();
-			googleMap.setMyLocationEnabled(true);
-
-			// Log.d(TAG, "Periodic location updates started!");
-			System.out.println("Location updates started");
-
-		} else {
-
-			requestingLocationUpdates = false;
-
-			// Stopping the location updates
-			stopLocationUpdates();
-			googleMap.setMyLocationEnabled(true);
-
-			// Log.d(TAG, "Periodic location updates stopped!");
-			System.out.println("Location updates stopped");
-		}
-	}
 
 	/**
 	 * Creating google api client object
@@ -679,27 +496,6 @@ public class ShowRouteActivity extends MapActivity implements
 		locationRequest.setFastestInterval(FASTEST_INTERVAL);
 		locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 		locationRequest.setSmallestDisplacement(DISPLACEMENT);
-	}
-
-	/**
-	 * Method to verify google play services on the device
-	 * */
-	private boolean checkPlayServices() {
-		int resultCode = GooglePlayServicesUtil
-				.isGooglePlayServicesAvailable(this);
-		if (resultCode != ConnectionResult.SUCCESS) {
-			if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-				GooglePlayServicesUtil.getErrorDialog(resultCode, this,
-						PLAY_SERVICES_RESOLUTION_REQUEST).show();
-			} else {
-				Toast.makeText(getApplicationContext(),
-						"This device is not supported.", Toast.LENGTH_LONG)
-						.show();
-				finish();
-			}
-			return false;
-		}
-		return true;
 	}
 
 	/**
@@ -740,7 +536,7 @@ public class ShowRouteActivity extends MapActivity implements
 	public void onConnected(Bundle arg0) {
 
 		// Once connected with google api, get the location
-		displayLocation();
+		getLocation();
 
 		if (requestingLocationUpdates) {
 			startLocationUpdates();
@@ -761,7 +557,7 @@ public class ShowRouteActivity extends MapActivity implements
 				Toast.LENGTH_SHORT).show();
 
 		// Displaying the new location on UI
-		displayLocation();
+		getLocation();
 	}
 
 }

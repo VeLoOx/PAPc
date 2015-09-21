@@ -33,7 +33,6 @@ public class LoginActivity extends Activity implements Consts {
 	EditText etUsername;
 	// Password Edit View Object
 	EditText etPwd;
-	// SharedPreferences sharedpreferences;
 	SharedPrefsUtils prefs;
 	ConnectionGuardian connGuard;
 
@@ -46,7 +45,7 @@ public class LoginActivity extends Activity implements Consts {
 		connGuard = new ConnectionGuardian(this);
 		
 		// Find Error Msg Text View control by ID
-		tvErrorMsg = (TextView) findViewById(R.id.login_error);
+		tvErrorMsg = (TextView) findViewById(R.id.loginError);
 		// Find Email Edit View control by ID
 		etUsername = (EditText) findViewById(R.id.loginUsername);
 		// Find Password Edit View control by ID
@@ -63,7 +62,6 @@ public class LoginActivity extends Activity implements Consts {
 	// When sharedprefs contains data home screen is displayed
 	@Override
 	protected void onResume() {
-		// prgDialog.show();
 		setDefaultValues();
 		if (prefs.checkLogin() && prefs.checkPassword()) {
 			navigateToHomeActivity();
@@ -83,14 +81,8 @@ public class LoginActivity extends Activity implements Consts {
 		prefs.setLogin(u);
 		prefs.setPassword(p);
 		prefs.setSessionID(sessionId);
-		System.out.println("Session id recived from server " + sessionId);
 	}
 
-	/**
-	 * Method gets triggered when Login button is clicked
-	 *
-	 * @param view
-	 */
 	public void loginUser(View view) {
 		if (connGuard.isConnectedToInternet()) {
 			// Get Email Edit View Value
@@ -102,10 +94,10 @@ public class LoginActivity extends Activity implements Consts {
 			if (Utility.isNotNull(userName) && Utility.isNotNull(password)) {
 				// Put Http parameter username with value of userName Edit View
 				// control
-				params.put("login", userName);
+				params.put(Consts.PARAM_LOGIN, userName);
 				// Put Http parameter password with value of Password Edit Value
 				// control
-				params.put("password", password);
+				params.put(Consts.PARAM_PASSWORD, password);
 				// Invoke RESTful Web Service with Http parameters
 				restInvoke(params);
 
@@ -117,11 +109,7 @@ public class LoginActivity extends Activity implements Consts {
 
 	}
 
-	/**
-	 * Method that performs RESTful webservice invocations
-	 *
-	 * @param params
-	 */
+	
 	public void restInvoke(RequestParams params) {
 		// Show Progress Dialog
 		prgDialog.show();
@@ -140,20 +128,20 @@ public class LoginActivity extends Activity implements Consts {
 							JSONObject jO = new JSONObject(answer);
 							// When the JSON response has status boolean value
 							// assigned with true
-							if (jO.getBoolean("status")) {
+							if (jO.getBoolean(Consts.MSG_STATUS)) {
 								Toast.makeText(getApplicationContext(),
 										R.string.loginSucces, Toast.LENGTH_LONG)
 										.show();
-								persistSession(jO.getString("data"));
+								persistSession(jO.getString(Consts.MSG_DATA));
 
 								// Navigate to Home screen
 								navigateToHomeActivity();
 							}
 							// Else display error message
 							else {
-								tvErrorMsg.setText(jO.getString("errorMessage"));
+								tvErrorMsg.setText(jO.getString(Consts.MSG_INFO));
 								Toast.makeText(getApplicationContext(),
-										jO.getString("errorMessage"),
+										jO.getString(Consts.MSG_INFO),
 										Toast.LENGTH_LONG).show();
 							}
 						} catch (JSONException e) {
@@ -193,9 +181,6 @@ public class LoginActivity extends Activity implements Consts {
 				});
 	}
 
-	/**
-	 * Method which navigates from Login Activity to Home Activity
-	 */
 	public void navigateToHomeActivity() {
 		prgDialog.dismiss();
 		Intent homeIntent = new Intent(getApplicationContext(),
@@ -204,11 +189,6 @@ public class LoginActivity extends Activity implements Consts {
 		startActivity(homeIntent);
 	}
 
-	/**
-	 * Method gets triggered when Register button is clicked
-	 *
-	 * @param view
-	 */
 	public void navigateToRegisterActivity(View view) {
 		prgDialog.dismiss();
 		Intent loginIntent = new Intent(getApplicationContext(),
@@ -220,18 +200,12 @@ public class LoginActivity extends Activity implements Consts {
 	@Override
 	protected void onStop() {
 		super.onStop();
-		/*
-		 * if (prgDialog != null) { prgDialog.dismiss(); prgDialog = null; }
-		 */
 		prgDialog.dismiss();
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		/*
-		 * if (prgDialog != null) { prgDialog.dismiss(); prgDialog = null; }
-		 */
 		prgDialog.dismiss();
 	}
 }

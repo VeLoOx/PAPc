@@ -20,6 +20,7 @@ import pl.pap.model.Route;
 import pl.pap.routeslist.adapter.RouteListAdapter;
 import pl.pap.utils.ConnectionGuardian;
 import pl.pap.utils.Consts;
+import pl.pap.utils.OfflineModeManager;
 import pl.pap.utils.SharedPrefsUtils;
 import pl.pap.utils.Utility;
 import android.app.Activity;
@@ -53,6 +54,7 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 
 	ConnectionGuardian connGuard;
 	SharedPrefsUtils prefs;
+	OfflineModeManager offManager;
 
 	//
 	TextView tvConn;
@@ -66,6 +68,7 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 		//
 		prefs = new SharedPrefsUtils(this);
 		connGuard = new ConnectionGuardian(this);
+		offManager= new OfflineModeManager(this);
 		//
 
 		//
@@ -83,9 +86,6 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 
 			}
 		});
-
-		// checkConnectionAndDealWithList();
-
 	}
 
 	@Override
@@ -97,14 +97,11 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 	@Override
 	protected void onStop() {
 		super.onStop();
-		// System.out.println("ChooseR onStop");
-
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		// System.out.println("ChooseR onPause");
 	}
 
 	@Override
@@ -144,17 +141,14 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 	}
 
 	private void selectCriteria() {
-		System.out.println("selectCriteria");
 
 		if (cDialog.cbAuthor.isChecked() && cDialog.cbCity.isChecked()) {
-			System.out.println("Both Checked");
 			applyCriteriaBoth(cDialog.criteriaAuthor, cDialog.criteriaCity);
 			adapter.clear();
 			adapter.addAll(appliedCriteriaList);
 			return;
 		} else {
 			if (cDialog.cbAuthor.isChecked()) {
-				System.out.println("Author Checked");
 				applyCriteriaAuthor(cDialog.criteriaAuthor);
 				adapter.clear();
 				adapter.addAll(appliedCriteriaList);
@@ -162,7 +156,6 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 			}
 
 			if (cDialog.cbCity.isChecked()) {
-				System.out.println("City Checked");
 				applyCriteriaCity(cDialog.criteriaCity);
 				adapter.clear();
 				adapter.addAll(appliedCriteriaList);
@@ -174,7 +167,6 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 		selectedRadio = cDialog.rgSelectMode.getCheckedRadioButtonId();
 
 		if (cDialog.rbShowMy.getId() == selectedRadio) {
-			System.out.println("Radion ShowMy");
 			applyCriteriaAuthor(prefs.getLogin());
 			adapter.clear();
 			adapter.addAll(appliedCriteriaList);
@@ -182,7 +174,6 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 		}
 
 		if (cDialog.rbShowAll.getId() == selectedRadio) {
-			System.out.println("Radio ShowAll");
 			adapter.clear();
 			adapter.addAll(routesList);
 			return;
@@ -197,8 +188,6 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 				if (value.getAuthor().equals(author)
 						&& value.getCity().equals(city)) {
 					appliedCriteriaList.add(value);
-					System.out.println("applied " + value.getAuthor() + " "
-							+ value.getCity());
 				}
 			}
 		} else
@@ -212,7 +201,6 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 			for (Route value : routesList) {
 				if (value.getAuthor().equals(author)) {
 					appliedCriteriaList.add(value);
-					System.out.println("applied " + value.getAuthor());
 				}
 			}
 		} else
@@ -224,9 +212,10 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 		appliedCriteriaList = new ArrayList<Route>();
 		if (Utility.isNotNull(city)) {
 			for (Route value : routesList) {
-				if (value.getCity().equals(city)) {
-					appliedCriteriaList.add(value);
-					System.out.println("applied " + value.getCity());
+				if (value.getCity() != null) {
+					if (value.getCity().equals(city)) {
+						appliedCriteriaList.add(value);
+					}
 				}
 			}
 		} else
@@ -246,13 +235,6 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 		params.put("login", prefs.getLogin());
 		params.put("sessionId", prefs.getSessionID());
 		restInvokeRequest(params);
-	}
-
-	private void storeRoutesList(String routesList) {
-		if (prefs.checkRoutesList()) {
-			prefs.removeRoutesList();
-		}
-		prefs.setRoutesList(routesList);
 	}
 
 	private void showStoredRoutesList() {
@@ -280,15 +262,10 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				/*
-				 * Toast.makeText(getApplicationContext(),
-				 * "Click ListItem Number " + position, Toast.LENGTH_LONG)
-				 * .show();
-				 */
+				
 				Route routeToPass = (Route) listView
 						.getItemAtPosition(position);
-				System.out.println(listView.getItemAtPosition(position));
-				// navigateToShowRouteActivity(routeToPass.getId().toString());
+				
 				navigateToShowRouteActivity(routeToPass);
 
 			}
@@ -311,8 +288,6 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 	}
 
 	private void restInvokeRequest(RequestParams params) {
-		// Show Progress Dialog
-		// prgDialog.show();
 		// Make RESTful webservice call using AsyncHttpClient object
 		AsyncHttpClient client = new AsyncHttpClient();
 		client.get(domainAdress + REQUEST_ROUTES_LIST, params,
@@ -323,21 +298,15 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 					public void onSuccess(int StatusCode, String answer) {
 						try {
 							JSONObject jO = new JSONObject(answer);
-							if (jO.getBoolean("status")) {
-								/*
-								 * System.out
-								 * .println("Recived string from server: " +
-								 * answer);
-								 * System.out.println("Data from serwer: " +
-								 * jO.getString("data"));
-								 */
-								convertFromJson(jO.getString("data"));
-								storeRoutesList(jO.getString("data"));
-								// Utility.convertRouteFromJson(jO.getString("data"));
+							if (jO.getBoolean(Consts.MSG_STATUS)) {
+								
+								convertFromJson(jO.getString(Consts.MSG_DATA));
+								offManager.storeRoutesList(jO.getString(Consts.MSG_DATA));
+							
 								populateList();
 							} else {
 								Toast.makeText(getApplicationContext(),
-										jO.getString("errorMessage"),
+										jO.getString(Consts.MSG_INFO),
 										Toast.LENGTH_LONG).show();
 							}
 						} catch (JSONException e) {
@@ -353,8 +322,6 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 					@Override
 					public void onFailure(int statusCode, Throwable error,
 							String content) {
-						// Hide Progress Dialog
-						// prgDialog.hide();
 						// When Http response code is '404'
 						if (statusCode == 404) {
 							Toast.makeText(getApplicationContext(),
@@ -375,14 +342,6 @@ public class ChooseRouteActivity extends BaseActivity implements Consts,
 				});
 	}
 
-	private void navigateToShowRouteActivity(String routeId) {
-		Intent showRouteIntent = new Intent(getApplicationContext(),
-				ShowRouteActivity.class);
-		showRouteIntent.putExtra("routeId", routeId);
-		showRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(showRouteIntent);
-
-	}
 
 	private void navigateToShowRouteActivity(Route route) {
 		Intent showRouteIntent = new Intent(getApplicationContext(),

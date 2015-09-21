@@ -44,7 +44,6 @@ public class CriteriaDialog extends DialogFragment {
         try {
             // Instantiate the NoticeDialogListener so we can send events to the host
         	cDialogListener = (CriteriaDialogListener) activity;
-        	System.out.println("Criteria Dialog: listener added");
         } catch (ClassCastException e) {
             // The activity doesn't implement the interface, throw exception
             throw new ClassCastException(activity.toString()
@@ -80,12 +79,9 @@ public class CriteriaDialog extends DialogFragment {
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int id) {								
-								System.out.println("CriteriaDialog: positive click");
 								int selectedRadio;
 								selectedRadio = rgSelectMode.getCheckedRadioButtonId();
 								rbSelected=(RadioButton) criteriaDialogView.findViewById(selectedRadio);
-								//System.out.println("Selected radio "+ rbSelected.getText());
-								//rbSelected = (RadioButton) criteriaDialogView.findViewById(selectedRadio);
 								criteriaCity=etCriteriaCity.getText().toString();
 								criteriaAuthor=etCriteriaAuthor.getText().toString();
 								cDialogListener.onCriteriaDialogPositiveClick(CriteriaDialog.this);
@@ -94,7 +90,6 @@ public class CriteriaDialog extends DialogFragment {
 				.setNegativeButton(R.string.cancel,
 						new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int id) {
-								System.out.println("CriteriaDialog: negative click");
 								cDialogListener.onCriteriaDialogNegativeClick(CriteriaDialog.this);
 								CriteriaDialog.this.getDialog().cancel();
 							}

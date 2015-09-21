@@ -4,11 +4,11 @@
     tools:context="pl.pap.client.MapActivity" >
 
     <item
-        android:id="@+id/action_search"
-        android:icon="@drawable/ic_action_search"
+        android:id="@+id/action_lookUp"
+        android:actionViewClass="android.widget.SearchView"
         android:showAsAction="ifRoom"
-        android:title="@string/abSearch"
-        android:actionViewClass="android.widget.SearchView"/>
+        android:title="@string/abSearch"/>
+    <!-- android:icon="@drawable/ic_action_search" -->
     <item
         android:id="@+id/item1"
         android:orderInCategory="1"

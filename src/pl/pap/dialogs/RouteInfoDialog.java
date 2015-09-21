@@ -65,7 +65,6 @@ public class RouteInfoDialog extends DialogFragment {
 			// Instantiate the NoticeDialogListener so we can send events to the
 			// host
 			iDialogListener = (RouteInfoDialogListener) activity;
-			System.out.println("Route Dialog: listener added");
 		} catch (ClassCastException e) {
 			// The activity doesn't implement the interface, throw exception
 			throw new ClassCastException(activity.toString()

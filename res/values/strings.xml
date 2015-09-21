@@ -19,7 +19,7 @@
     <string name="userPassword">Enter password</string>
     <string name="btnLogin">Login</string>
     <string name="btnSignup">Singup</string>
-    <string name="tooShort"></string>
+    <string name="tooShort">Either Username or Login is too short</string>
     <string name="loginSucces">"You are successfully logged in!</string>
     <string name="emptyField">"Don't leave any field empty"</string>
     
@@ -76,7 +76,7 @@
     <string name="info">Info</string>
     <string name="edit">Edit</string>
     <string name="showUserLocation">Show location</string>
-    <string name="searchHint">Search...</string>
+    <string name="searchHint">Search</string>
 
     <!-- show criteria dialog -->
     <string name="criteriacity">City</string>
@@ -88,7 +88,7 @@
     <!--  -->
 
     <string name="nothingToPersist">Nothing to persist</string>
-    <string name="unnableToCreateMap">Sorry! Unable to create map</string>
+    <string name="unnableToCreateMap">Error! Unable to create map</string>
 
     <!-- ARE YOU SURE Dialog -->
     <string name="yes">Yes</string>
@@ -103,7 +103,7 @@
     <!-- TOAST when invoking REST -->
     <string name="err404">Requested resource not found</string>
     <string name="err500">Something went wrong at server end</string>
-    <string name="otherErr">Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]</string>
+    <string name="otherErr">Unexpected Error occcured! [remote server might be offline]</string>
     <string name="invalidJSON">Error Occurred [Server JSON response might be invalid]!</string>
 
     <!-- ActionBar -->
@@ -116,11 +116,15 @@
     <string name="drawer_close">Slider Menu Closed</string>
 
     <!-- Slider Menu Items -->
+    <string name="s_home">Home</string>
+    <string name="s_planRoute">Plan Route</string>
+    <string name="s_chooseRoute">Choose Route</string>
+    <string name="s_startNewRoute">Start New Route</string>
     <string-array name="slider_menu_items">
-        <item>Home</item>
-        <item>Plan Route</item>
-        <item>Choose Route</item>
-        <item>Start New Route</item>
+        <item>@string/s_home</item>
+        <item>@string/s_planRoute</item>
+        <item>@string/s_chooseRoute</item>
+        <item>@string/s_startNewRoute</item>
     </string-array>
 
     <!-- Slider Menu List Item Icons -->

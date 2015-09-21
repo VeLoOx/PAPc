@@ -55,7 +55,6 @@ public class MarkerDialog extends DialogFragment {
         try {
             // Instantiate the NoticeDialogListener so we can send events to the host
         	mDialogListener = (MarkerDialogListener) activity;
-        	System.out.println("Dialog: listener added");
         } catch (ClassCastException e) {
             // The activity doesn't implement the interface, throw exception
             throw new ClassCastException(activity.toString()
@@ -73,17 +72,11 @@ public class MarkerDialog extends DialogFragment {
 		
 		View markDialogView =inflater.inflate(R.layout.dialog_marker, null);
 		etMarkerTitle= (EditText) markDialogView.findViewById(R.id.markerTitle);
-		etMarkerSnippet= (EditText)markDialogView.findViewById(R.id.markerSnippet);
-		
-		//etMarkerTitle.setText(currMarker.getTitle());
-		//etMarkerSnippet.setText(currMarker.getSnippet());s
-		
-		btnDeleteMarker=(Button) markDialogView.findViewById(R.id.markerDelete);
-		
+		etMarkerSnippet= (EditText)markDialogView.findViewById(R.id.markerSnippet);		
+		btnDeleteMarker=(Button) markDialogView.findViewById(R.id.markerDelete);		
 		btnDeleteMarker.setOnClickListener(new OnClickListener() {			
 			@Override
 			public void onClick(View v) {
-				System.out.println("Dialog: delete");	
 				isDeletable=true;
 				MarkerDialog.this.getDialog().cancel();
 			}
@@ -100,13 +93,11 @@ public class MarkerDialog extends DialogFragment {
 								markerTitle=etMarkerTitle.getText().toString();
 								markerSnippet=etMarkerSnippet.getText().toString();
 								mDialogListener.onMarkerDialogPositiveClick(MarkerDialog.this);
-								System.out.println("Dialog: positive click");
 							}
 						})
 				.setNegativeButton(R.string.cancel,
 						new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int id) {
-								System.out.println("Dialog: negative click");
 								mDialogListener.onMarkerDialogNegativeClick(MarkerDialog.this);
 								MarkerDialog.this.getDialog().cancel();
 							}

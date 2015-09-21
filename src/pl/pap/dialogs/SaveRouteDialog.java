@@ -51,7 +51,6 @@ public class SaveRouteDialog extends DialogFragment {
         try {
             // Instantiate the NoticeDialogListener so we can send events to the host
         	rDialogListener = (SaveRouteDialogListener) activity;
-        	System.out.println("Route Dialog: listener added");
         } catch (ClassCastException e) {
             // The activity doesn't implement the interface, throw exception
             throw new ClassCastException(activity.toString()
@@ -85,13 +84,11 @@ public class SaveRouteDialog extends DialogFragment {
 								routeCity= etRouteCity.getText().toString();
 								routeDescription= etRouteDescription.getText().toString();
 								rDialogListener.onSaveRouteDialogPositiveClick(SaveRouteDialog.this);
-								System.out.println("RouteInfoDialog: positive click");
 							}
 						})
 				.setNegativeButton(R.string.cancel,
 						new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int id) {
-								System.out.println("RouteInfoDialog: negative click");
 								rDialogListener.onSaveRouteDialogNegativeClick(SaveRouteDialog.this);
 								SaveRouteDialog.this.getDialog().cancel();
 							}

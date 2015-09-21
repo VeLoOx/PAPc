@@ -44,7 +44,7 @@
             android:inputType="textPassword" />
 
         <TextView
-            android:id="@+id/login_error"
+            android:id="@+id/loginError"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:padding="10dip"

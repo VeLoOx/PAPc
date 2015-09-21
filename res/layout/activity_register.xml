@@ -27,7 +27,7 @@
         <!-- Name TextField -->
  
         <EditText
-            android:id="@+id/registerName"
+            android:id="@+id/registerUsername"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content" 
             android:hint="@string/userName"/>
@@ -53,7 +53,7 @@
         <!-- Error message -->
  
         <TextView
-            android:id="@+id/register_error"
+            android:id="@+id/registerError"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:gravity="center"

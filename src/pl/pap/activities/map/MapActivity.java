@@ -1,5 +1,8 @@
 package pl.pap.activities.map;
 
+import java.io.UnsupportedEncodingException;
+
+import org.apache.http.entity.StringEntity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -8,7 +11,6 @@ import pl.pap.client.R;
 import pl.pap.dialogs.MarkerDialog;
 import pl.pap.dialogs.SaveRouteDialog;
 import pl.pap.maps.MapsMethods;
-import pl.pap.maps.MapsSettings;
 import pl.pap.model.MarkerModel;
 import pl.pap.model.Route;
 import pl.pap.utils.ConnectionGuardian;
@@ -23,17 +25,16 @@ import android.support.v4.app.FragmentManager;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
 
 public class MapActivity extends BaseActivity implements
 		OnMapLongClickListener, OnMapClickListener, OnMarkerDragListener,
@@ -43,15 +44,14 @@ public class MapActivity extends BaseActivity implements
 	// Google Map
 	protected GoogleMap googleMap;
 	protected Marker currentMarker;
-	protected MapsSettings maps;
 	protected Route route;// = new Route();
 
 	// Dialogs
 	protected MarkerDialog mDialog = new MarkerDialog(currentMarker);
-	protected SaveRouteDialog rDialog;// = new SaveRouteDialog();
+	protected SaveRouteDialog rDialog;
 
 	// Utils
-	protected JSONObject jsonMarker;
+	// protected JSONObject jsonMarker;
 	protected SharedPrefsUtils prefs;
 	protected ConnectionGuardian connGuard;
 	protected OfflineModeManager offManager;
@@ -63,9 +63,6 @@ public class MapActivity extends BaseActivity implements
 		super.onCreate(savedInstanceState);
 	}
 
-	/**
-	 * function to load map If map is not created it will create it for you
-	 * */
 	@Override
 	@SuppressLint("NewApi")
 	public void initializeMap() {
@@ -76,10 +73,33 @@ public class MapActivity extends BaseActivity implements
 			// check if map is created successfully or not
 			if (googleMap == null) {
 				Toast.makeText(getApplicationContext(),
-						"Sorry! unable to create maps", Toast.LENGTH_SHORT)
-						.show();
+						R.string.unnableToCreateMap, Toast.LENGTH_SHORT).show();
 			}
 		}
+	}
+
+	public void setUpMap() {
+		// Changing map type
+		googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+
+		// Showing / hiding your current location
+		googleMap.setMyLocationEnabled(false);
+
+		// Enable / Disable zooming controls
+		googleMap.getUiSettings().setZoomControlsEnabled(false);
+
+		// Enable / Disable my location button
+		googleMap.getUiSettings().setMyLocationButtonEnabled(true);
+
+		// Enable / Disable Compass icon
+		googleMap.getUiSettings().setCompassEnabled(true);
+
+		// Enable / Disable Rotate gesture
+		googleMap.getUiSettings().setRotateGesturesEnabled(true);
+
+		// Enable / Disable zooming functionality
+		googleMap.getUiSettings().setZoomGesturesEnabled(true);
+
 	}
 
 	@Override
@@ -97,8 +117,6 @@ public class MapActivity extends BaseActivity implements
 		rDialog.show(fragMan, "saveRouteDialog");
 	}
 
-
-
 	protected void cleanMap() {
 		googleMap.clear();
 		route = new Route();
@@ -113,8 +131,6 @@ public class MapActivity extends BaseActivity implements
 		marker.draggable(true);
 		Marker tmp = googleMap.addMarker(marker);
 		persistMarker(tmp);
-		System.out.println("Marker added " + point.latitude + "---"
-				+ point.longitude);
 	}
 
 	@Override
@@ -134,36 +150,15 @@ public class MapActivity extends BaseActivity implements
 
 	@Override
 	public boolean updateMarkers(Marker marker) {
-		System.out.println("Marker remove and update status: "
-				+ route.removeMarkerFromMap(marker.getId()));
 		persistMarker(marker);
-		System.out.println("Marker updated");
 		return true;
 
-	}
-
-	protected void saveRoute() {
-		route.setAuthor(prefs.getLogin());
-		if (connGuard.isConnectedToInternet()) {
-			RequestParams params = new RequestParams();
-			params.put("login", prefs.getLogin());
-			params.put("sessionId", prefs.getSessionID());
-			params.put("route", Utility.convertToJson(route));
-			restInvoke(params);
-		} else {
-			/*
-			 * Toast.makeText(getApplicationContext(), R.string.notConnected,
-			 * Toast.LENGTH_LONG).show();
-			 */
-			offManager.saveRoute(Utility.convertToJson(route));
-		}
 	}
 
 	// LISTENERS
 	@Override
 	public boolean onMarkerClick(Marker mark) {
 		deleteMarker();
-		System.out.println(mark.getPosition());
 		currentMarker = mark;
 		mDialog = new MarkerDialog(currentMarker);
 		FragmentManager fragMan = getSupportFragmentManager();
@@ -173,8 +168,6 @@ public class MapActivity extends BaseActivity implements
 
 	@Override
 	public void onMapClick(LatLng arg0) {
-		System.out.println("Map clicked");
-		// maps.googleMap.animateCamera(CameraUpdateFactory.newLatLng(arg0));
 		deleteMarker();
 	}
 
@@ -197,7 +190,6 @@ public class MapActivity extends BaseActivity implements
 
 	@Override
 	public void onMarkerDragEnd(Marker mark) {
-		System.out.println("Marker drag end");
 		currentMarker = mark;
 		updateMarkers(currentMarker);
 
@@ -205,8 +197,6 @@ public class MapActivity extends BaseActivity implements
 
 	@Override
 	public void onMarkerDialogPositiveClick(DialogFragment dialog) {
-		// System.out.println("Title changed");
-		// System.out.println("mDialog marker title "+ mDialog.markerTitle);
 		currentMarker.setTitle(mDialog.markerTitle);
 		currentMarker.setSnippet(mDialog.markerSnippet);
 		updateMarkers(currentMarker);
@@ -215,7 +205,6 @@ public class MapActivity extends BaseActivity implements
 
 	@Override
 	public void onMarkerDialogNegativeClick(DialogFragment dialog) {
-		// System.out.println("Negative Click");
 	}
 
 	@Override
@@ -224,10 +213,7 @@ public class MapActivity extends BaseActivity implements
 		route.setCity(rDialog.routeCity);
 		route.setDescription(rDialog.routeDescription);
 		if (toPersist) {
-
 			saveRoute();
-			// navigateUpTo(getParentActivityIntent());
-			navigateToHomeActivity();
 		}
 
 	}
@@ -238,33 +224,49 @@ public class MapActivity extends BaseActivity implements
 
 	}
 
-	protected void restInvoke(RequestParams params) {
-		// Show Progress Dialog
-		// prgDialog.show();
-		// Make RESTful webservice call using AsyncHttpClient object
-		// System.out.println("PlanRouteActivity: Inside restInvoke");
+	protected void saveRoute() {
+		route.setAuthor(prefs.getLogin());
+		if (connGuard.isConnectedToInternet()) {
+			restInvokePost();
+		} else {
+			offManager.storeRoute(Utility.convertToJson(route));
+			navigateToHomeActivity();
+		}
+	}
+
+	protected void restInvokePost() {
 		AsyncHttpClient client = new AsyncHttpClient();
-		client.get(domainAdress + PERSIST_ROUTE, params,
-				new AsyncHttpResponseHandler() {
+		StringEntity entity = null;
+		try {
+			entity = new StringEntity(Utility.convertToJson(route), "UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		client.addHeader(Consts.PARAM_LOGIN, prefs.getLogin());
+		client.addHeader(Consts.PARAM_SESSIONID, prefs.getSessionID());
+		client.post(getApplicationContext(), domainAdress + PERSIST_ROUTE,
+				null, entity, Consts.JSON, new AsyncHttpResponseHandler() {
 					// When the response returned by REST has Http response code
 					// '200'
 					@Override
 					public void onSuccess(int StatusCode, String answer) {
-						// Hide Progress Dialog
-						// prgDialog.hide();
 						try {
 							// JSON Object
 							JSONObject jO = new JSONObject(answer);
 							// When the JSON response has status boolean value
 							// assigned with true
-							if (jO.getBoolean("status")) {
-								Toast.makeText(getApplicationContext(),
-										jO.getString("data") + StatusCode,
-										Toast.LENGTH_LONG).show();
+							if (jO.getBoolean(Consts.MSG_STATUS)) {
+								Toast.makeText(
+										getApplicationContext(),
+										jO.getString(Consts.MSG_INFO)
+												+ StatusCode, Toast.LENGTH_LONG)
+										.show();
+								navigateToHomeActivity();
 							} else {
 								Toast.makeText(
 										getApplicationContext(),
-										jO.getString("errorMessage")
+										jO.getString(Consts.MSG_INFO)
 												+ StatusCode, Toast.LENGTH_LONG)
 										.show();
 							}
@@ -282,29 +284,25 @@ public class MapActivity extends BaseActivity implements
 					@Override
 					public void onFailure(int statusCode, Throwable error,
 							String content) {
-						// Hide Progress Dialog
-						// prgDialog.hide();
 						// When Http response code is '404'
 						if (statusCode == 404) {
 							Toast.makeText(getApplicationContext(),
-									"Requested resource not found",
-									Toast.LENGTH_LONG).show();
+									R.string.err404, Toast.LENGTH_LONG).show();
 						}
 						// When Http response code is '500'
 						else if (statusCode == 500) {
 							Toast.makeText(getApplicationContext(),
-									"Something went wrong at server end",
-									Toast.LENGTH_LONG).show();
+									R.string.err500, Toast.LENGTH_LONG).show();
 						}
 						// When Http response code other than 404, 500
 						else {
-							Toast.makeText(
-									getApplicationContext(),
-									"Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]",
-									Toast.LENGTH_LONG).show();
+							Toast.makeText(getApplicationContext(),
+									R.string.otherErr, Toast.LENGTH_LONG)
+									.show();
 						}
 					}
 				});
+
 	}
 
 }

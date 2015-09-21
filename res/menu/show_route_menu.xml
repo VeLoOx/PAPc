@@ -24,7 +24,7 @@
         android:id="@+id/showRouteDeleteItem"
         android:orderInCategory="4"
         android:title="@string/delete"
-        android:visible="true">
+        android:visible="false">
     </item>
    <item
         android:id="@+id/action_showLocation"

@@ -50,7 +50,6 @@ public class BaseActivity extends FragmentActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.slider_menu_layout);
 		app=(App) getApplicationContext();
-		// setUpSlideMenu();
 	}
 
 	/**
@@ -120,11 +119,6 @@ public class BaseActivity extends FragmentActivity {
 			}
 		};
 		drawerLayout.setDrawerListener(drawerToggle);
-		// if (savedInstanceState == null) {
-		// on first time display view for first nav item
-		// displayView(0);
-
-		// }
 		drawerList.setItemChecked(app.slideMenuPosition, true);
 
 	}
@@ -174,20 +168,9 @@ public class BaseActivity extends FragmentActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-
-		/*
-		 * if (item.getItemId() == android.R.id.home) {
-		 * System.out.println("Home button pressed"); if
-		 * (drawerLayout.isDrawerOpen(drawerList)) {
-		 * System.out.println("Drawer otwarty - zamykam");
-		 * drawerLayout.closeDrawer(drawerList); } else {
-		 * //drawerLayout.openDrawer(drawerList); } }
-		 */
-
 		if (drawerToggle.onOptionsItemSelected(item)) {
 			return true;
 		}
-
 		return super.onOptionsItemSelected(item);
 	}
 
@@ -228,18 +211,10 @@ public class BaseActivity extends FragmentActivity {
 	}
 
 	public void navigateToHomeActivity() {
-		// prgDialog.dismiss();
 		Intent homeIntent = new Intent(getApplicationContext(),
 				HomeActivity.class);
 		homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(homeIntent);
-	}
-
-	public void navigateToPlanRouteActivity(View view) {
-		Intent planRouteIntent = new Intent(getApplicationContext(),
-				PlanRouteActivity.class);
-		planRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(planRouteIntent);
 	}
 
 	public void navigateToPlanRouteActivity() {
@@ -249,32 +224,11 @@ public class BaseActivity extends FragmentActivity {
 		startActivity(planRouteIntent);
 	}
 
-	public void navigateToStartNewRouteActivity(View view) {
-		Intent startRouteIntent = new Intent(getApplicationContext(),
-				StartNewRouteActivity.class);
-		startRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(startRouteIntent);
-	}
-
 	public void navigateToStartNewRouteActivity() {
 		Intent startRouteIntent = new Intent(getApplicationContext(),
 				StartNewRouteActivity.class);
 		startRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(startRouteIntent);
-	}
-
-	public void navigateToShowRouteActivity(View view) {
-		Intent showRouteIntent = new Intent(getApplicationContext(),
-				ShowRouteActivity.class);
-		showRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(showRouteIntent);
-	}
-
-	public void navigateToChooseRouteActivity(View view) {
-		Intent chooseRouteIntent = new Intent(getApplicationContext(),
-				ChooseRouteActivity.class);
-		chooseRouteIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(chooseRouteIntent);
 	}
 
 	public void navigateToChooseRouteActivity() {

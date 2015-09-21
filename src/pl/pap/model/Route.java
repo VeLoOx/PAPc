@@ -10,8 +10,6 @@ public class Route {
 	private String name;
 	private String description;
 	private String city;
-	//private ArrayList<Marker> markerList = new ArrayList<Marker>();
-	//private HashMap<String, Marker> markerMap1 = new HashMap<String, Marker>();
 	private HashMap<String, MarkerModel> markerMap = new HashMap<String, MarkerModel>();
 
 	public MarkerOptions convertToMarkerOptions(MarkerModel markerM) {
@@ -19,30 +17,6 @@ public class Route {
 		return new MarkerOptions().position(markerM.getPosition()).title(
 				markerM.getTitle()).snippet(markerM.getSnippet());
 	}
-
-	/*public boolean addMarkerToList(Marker marker) {
-		return (markerList.add(marker));
-	}
-
-	public boolean removeMarkerFromList(Marker marker) {
-		for (Marker mark : markerList) {
-			if (mark.getId() == marker.getId()) {
-				mark.remove();
-				return true;
-			}
-		}
-		return false;
-
-	}
-
-	public ArrayList<Marker> getMarkerList() {
-		return markerList;
-	}
-
-	public void setMarkerList(ArrayList<Marker> markerList) {
-		this.markerList = markerList;
-	}
-*/
 	public HashMap<String, MarkerModel> getMarkerMap() {
 		return markerMap;
 	}

@@ -39,9 +39,9 @@ public class RegisterActivity extends Activity implements Consts {
 		setContentView(R.layout.activity_register);
 		connGuard = new ConnectionGuardian(this);
 		// Find Error Msg Text View control by ID
-		tvErrorMsg = (TextView) findViewById(R.id.register_error);
+		tvErrorMsg = (TextView) findViewById(R.id.registerError);
 		// Find Name Edit View control by ID
-		etUsername = (EditText) findViewById(R.id.registerName);
+		etUsername = (EditText) findViewById(R.id.registerUsername);
 		// Find Password Edit View control by ID
 		etPwd = (EditText) findViewById(R.id.registerPassword);
 		// Instantiate Progress Dialog object
@@ -52,11 +52,6 @@ public class RegisterActivity extends Activity implements Consts {
 		prgDialog.setCancelable(false);
 	}
 
-	/**
-	 * Method gets triggered when Register button is clicked
-	 *
-	 * @param view
-	 */
 	public void registerUser(View view) {
 		if (connGuard.isConnectedToInternet()) {
 			// Get NAme ET control value
@@ -71,11 +66,11 @@ public class RegisterActivity extends Activity implements Consts {
 				// When Email entered is Valid
 				if (Utility.isNotTooShort(userName)
 						&& Utility.isNotTooShort(password)) {
-					params.put("login", userName);
+					params.put(Consts.PARAM_LOGIN, userName);
 					// Put Http parameter password with value of Password Edit
 					// View
 					// control
-					params.put("password", password);
+					params.put(Consts.PARAM_PASSWORD, password);
 					// Invoke RESTful Web Service with Http parameters
 					restInvoke(params);
 				}
@@ -94,17 +89,12 @@ public class RegisterActivity extends Activity implements Consts {
 		}
 	}
 
-	/**
-	 * Method that performs RESTful webservice invocations
-	 *
-	 * @param params
-	 */
 	public void restInvoke(RequestParams params) {
 		// Show Progress Dialog
 		prgDialog.show();
 		// Make RESTful webservice call using AsyncHttpClient object
 		AsyncHttpClient client = new AsyncHttpClient();
-		client.get(domainAdress + REGISTER, params,
+		client.post(domainAdress + REGISTER, params,
 				new AsyncHttpResponseHandler() {
 					// When the response returned by REST has Http response code
 					// '200'
@@ -117,7 +107,7 @@ public class RegisterActivity extends Activity implements Consts {
 							JSONObject jO = new JSONObject(response);
 							// When the JSON response has status boolean value
 							// assigned with true
-							if (jO.getBoolean("status")) {
+							if (jO.getBoolean(Consts.MSG_STATUS)) {
 								// Set Default Values for Edit View controls
 								setDefaultValues();
 								// Display successfully registered message using
@@ -129,9 +119,9 @@ public class RegisterActivity extends Activity implements Consts {
 							}
 							// Else display error message
 							else {
-								tvErrorMsg.setText(jO.getString("errorMessage"));
+								tvErrorMsg.setText(jO.getString(Consts.MSG_INFO));
 								Toast.makeText(getApplicationContext(),
-										jO.getString("errorMessage"),
+										jO.getString(Consts.MSG_INFO),
 										Toast.LENGTH_LONG).show();
 							}
 						} catch (JSONException e) {
@@ -166,14 +156,13 @@ public class RegisterActivity extends Activity implements Consts {
 							Toast.makeText(getApplicationContext(),
 									R.string.otherErr, Toast.LENGTH_LONG)
 									.show();
+
 						}
 					}
 				});
 	}
 
-	/**
-	 * Method which navigates from Register Activity to Login Activity
-	 */
+
 	public void navigateToLoginActivity(View view) {
 		prgDialog.dismiss();
 		Intent loginIntent = new Intent(RegisterActivity.this,
@@ -192,19 +181,8 @@ public class RegisterActivity extends Activity implements Consts {
 		startActivity(loginIntent);
 	}
 
-	/**
-	 * Set default values for Edit View controls
-	 */
 	private void setDefaultValues() {
 		etUsername.setText("");
 		etPwd.setText("");
 	}
-
-	/*
-	 * @Override protected void onStop() { super.onStop(); if (prgDialog !=
-	 * null) { prgDialog.dismiss(); prgDialog = null; } }
-	 * 
-	 * @Override protected void onPause() { super.onPause(); if (prgDialog !=
-	 * null) { prgDialog.dismiss(); prgDialog = null; } }
-	 */
 }

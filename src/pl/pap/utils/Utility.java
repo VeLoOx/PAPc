@@ -13,31 +13,6 @@ import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
 
 public class Utility {
-    private static Pattern pattern;
-    private static Matcher matcher;
-    //Email Pattern
-    private static final String EMAIL_PATTERN =
-            "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
-            + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
- 
-    /**
-     * Validate Email with regular expression
-     *
-     * @param email
-     * @return true for Valid Email and false for Invalid Email
-     */
-    public static boolean validate(String email) {
-        pattern = Pattern.compile(EMAIL_PATTERN);
-        matcher = pattern.matcher(email);
-        return matcher.matches();
- 
-    }
-    /**
-     * Checks for Null String object
-     *
-     * @param txt
-     * @return true for not null and false for null String object
-     */
     public static boolean isNotNull(String txt){
         return txt!=null && txt.trim().length()>0 ? true: false;
     }
@@ -46,34 +21,12 @@ public class Utility {
     	return txt.trim().length()>3;
     }
     
-    /**
-     * Get process name by its PID
-     * @param context
-     * @param pid
-     * @return
-     */
-    public static String getAppNameByPID(Context context, int pid){
-        ActivityManager manager 
-                   = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-
-        for(RunningAppProcessInfo processInfo : manager.getRunningAppProcesses()){
-            if(processInfo.pid == pid){
-                return processInfo.processName;
-            }
-        }
-        return "";
-    }
-    
     public static String convertToJson(Object obj){
     	Gson gson = new Gson();
-		String ret = "";
-		ret = gson.toJson(obj);
-		System.out.println("Utility:convertToJson: " +ret);
-		return ret;
+		return gson.toJson(obj);
     }
     
     public static Route convertRouteFromJson(String json){
-    	System.out.println("Utility: convertRouteFromJson");
     	Gson gson = new Gson();
 		Route route = gson.fromJson(json, Route.class);
 		return route;
