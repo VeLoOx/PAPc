@@ -1,0 +1,44 @@
+
+
+You could do something like this.-
+
+public static Drawable getDrawable(String name) {
+    Context context = YourApplication.getContext();
+    int resourceId = context.getResources().getIdentifier(name, "drawable", YourApplication.getContext().getPackageName());
+    return context.getResources().getDrawable(resourceId);
+}
+
+In order to access the context from anywhere, you may extend Application class.-
+
+public class YourApplication extends Application {
+
+    private static YourApplication instance;
+
+    public YourApplication() {
+        instance = this;
+    }
+
+    public static Context getContext() {
+        return instance;
+    }
+}
+
+And map it in your Manifest application tag
+
+<application
+    android:name=".YourApplication"
+    ....
+
+shareimprove this answer
+	
+edited Apr 7 '14 at 18:29
+worked
+2,52522858
+	
+answered May 4 '13 at 2:12
+ssantos
+9,37241944
+	
+   	 
+	
+Thank you, I never know I can get the context this way before. It seems that it will make the codes cleaner. – hguser May 4 '13 at 2:18 
